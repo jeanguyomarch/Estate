@@ -14,6 +14,9 @@ includesdir = $(includedir)/estate-@VMAJ@
 
 libestate_la_SOURCES = \
 estate_main.c \
+estate_state.c \
+estate_transition.c \
+estate_machine.c \
 estate_private.h
 
 libestate_la_LIBADD = @EFL_LIBS@
