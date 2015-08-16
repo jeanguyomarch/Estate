@@ -248,7 +248,7 @@ estate_cc_parser_parse(Parser *p)
       goto fail; \
    } while (0)
 
-   for (c = *(p->ptr); c != EOF; c = _char_next_get(p))
+   for (c = _char_next_get(p); c != EOF; c = _char_next_get(p))
      {
         /* Comments... skip */
         if (p->comments != COMMENT_NONE)
