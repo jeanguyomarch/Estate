@@ -3,6 +3,12 @@
 static int _init_count = 0;
 int _estate_log_dom = -1;
 
+#if 0
+int ESTATE_EVENT_ENTERER = -1;
+int ESTATE_EVENT_EXITER = -1;
+int ESTATE_EVENT_TRANSITION = -1;
+#endif
+
 EAPI int
 estate_init(void)
 {
@@ -14,6 +20,11 @@ estate_init(void)
              EINA_LOG_CRIT("Failed to create log domain");
              return --_init_count;
           }
+#if 0
+        ESTATE_EVENT_ENTERER = ecore_event_type_new();
+        ESTATE_EVENT_EXITER = ecore_event_type_new();
+        ESTATE_EVENT_TRANSITION = ecore_event_type_new();
+#endif
      }
    return _init_count;
 }

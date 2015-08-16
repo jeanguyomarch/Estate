@@ -11,10 +11,11 @@ typedef enum
 {
    ESTATE_CB_TYPE_ENTERER         = 0,
    ESTATE_CB_TYPE_EXITER          = 1,
-   ESTATE_CB_TYPE_TRANSITION
+   ESTATE_CB_TYPE_TRANSITION      = 2
 } Estate_Cb_Type;
 
 typedef void (*Estate_Cb)(void              *data,
+                //          Estate_Machine    *mach,
                           Estate_Cb_Type     type,
                           Estate_Transition *transition);
 
@@ -66,6 +67,11 @@ estate_machine_transition_add(Estate_Machine          *mach,
 
 EAPI Eina_Bool
 estate_machine_check(Estate_Machine *mach);
+
+EAPI Estate_State *estate_machine_current_state_get(const Estate_Machine *mach);
+
+
+//EAPI Eina_Bool estate_ecore_main_loop_enabled_set(Estate_Machine *mach, Eina_Bool set);
 
 #endif /* ! _ESTATE_H_ */
 

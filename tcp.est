@@ -1,0 +1,21 @@
+tcp {
+   transitions {
+      Tr0 : S1 -> S2;
+      Tr1 : S2 -> S3;
+   }
+   S1 {
+      enterer {
+         func: func1;
+         data: data;
+      }
+      exiter {
+         func: func2;
+         data: data;
+      }
+      transition {
+         func: func3;
+         data: data;
+      }
+   }
+}
+

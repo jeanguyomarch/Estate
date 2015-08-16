@@ -24,6 +24,10 @@ estate_state_init(Estate_State             *st,
                   const Estate_Transition **transitions,
                   unsigned int              transit_count)
 {
+   EINA_SAFETY_ON_NULL_RETURN_VAL(st, EINA_FALSE);
+   EINA_SAFETY_ON_NULL_RETURN_VAL(name, EINA_FALSE);
+   EINA_SAFETY_ON_NULL_RETURN_VAL(transitions, EINA_FALSE);
+
    unsigned int i;
 
    st->transit = malloc(sizeof(Estate_Transition *) * transit_count);

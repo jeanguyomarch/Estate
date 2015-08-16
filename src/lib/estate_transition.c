@@ -8,6 +8,8 @@ estate_transition_init(Estate_Transition  *tr,
                        Estate_Cb           func,
                        void               *data)
 {
+   EINA_SAFETY_ON_NULL_RETURN_VAL(tr, EINA_FALSE);
+   EINA_SAFETY_ON_NULL_RETURN_VAL(name, EINA_FALSE);
    EINA_SAFETY_ON_NULL_RETURN_VAL(from, EINA_FALSE);
    EINA_SAFETY_ON_NULL_RETURN_VAL(to, EINA_FALSE);
 

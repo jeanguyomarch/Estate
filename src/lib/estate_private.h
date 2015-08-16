@@ -5,6 +5,12 @@
 
 extern int _estate_log_dom;
 
+#if 0
+extern int ESTATE_EVENT_ENTERER;
+extern int ESTATE_EVENT_EXITER;
+extern int ESTATE_EVENT_TRANSITION;
+#endif
+
 typedef struct _State_Cb_Wrapper State_Cb_Wrapper;
 
 struct _State_Cb_Wrapper
@@ -28,6 +34,8 @@ struct _Estate_Machine
    unsigned int          tr_curr;
 
    Estate_State         *current_state;
+   Eina_Hash            *data;
+   //Ecore_Event_Handler  *evt[3];
 };
 
 struct _Estate_State

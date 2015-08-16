@@ -1,0 +1,461 @@
+#include "estate_cc.h"
+
+enum
+{
+   COMMENT_NONE         = 0,
+   COMMENT_SINGLE_LINE,
+   COMMENT_MULTIPLE_LINES
+};
+
+typedef enum
+{
+   SM_NONE                      = 0,
+   SM_FSM                       = 1,
+   SM_TRANSITION_START          = 2,
+   SM_TRANSITION_FROM           = 3,
+   SM_TRANSITION_TO             = 4,
+   SM_STATE                     = 5,
+   SM_STATE_EOB                 = 6,
+   SM_STATE_CB                  = 7,
+   SM_STATE_CB_FUNC_PROP        = 8,
+   SM_STATE_CB_DATA_PROP        = 9
+} Sm;
+
+struct _Parser
+{
+   Eina_File  *ef;
+   Eina_List  *parse;
+
+   unsigned char *start;
+   unsigned char *end;
+   unsigned char *ptr;
+
+   unsigned int line;
+   unsigned int col;
+
+   unsigned char comments;
+   unsigned char sm;
+   Eina_Bool stop_word;
+   Eina_Bool has_token;
+};
+
+static State *
+_state_new(const char *name,
+           const int   len)
+{
+   State *s;
+   s = calloc(1, sizeof(*s));
+   s->name = eina_stringshare_add_length(name, len);
+   return s;
+}
+
+static void
+_state_free(State *s)
+{
+   if (s->enterer.func) eina_stringshare_del(s->enterer.func);
+   if (s->enterer.data) eina_stringshare_del(s->enterer.data);
+   if (s->exiter.func) eina_stringshare_del(s->exiter.func);
+   if (s->exiter.data) eina_stringshare_del(s->exiter.data);
+   if (s->transition.func) eina_stringshare_del(s->transition.func);
+   if (s->transition.data) eina_stringshare_del(s->transition.data);
+   eina_stringshare_del(s->name);
+   free(s);
+}
+
+static Transit *
+_transit_new(const char *name,
+             const int   len)
+{
+   Transit *t;
+   t = calloc(1, sizeof(*t));
+   t->name = eina_stringshare_add_length(name, len);
+   return t;
+}
+
+static void
+_transit_free(Transit *t)
+{
+   eina_stringshare_del(t->name);
+   eina_stringshare_del(t->from);
+   eina_stringshare_del(t->to);
+   free(t);
+}
+
+static Fsm *
+_fsm_new(const char *name,
+         const int   len)
+{
+   /* TODO error cases */
+   Fsm *f;
+   f = calloc(1, sizeof(*f));
+   f->name = eina_stringshare_add_length(name, len);
+   f->transitions = eina_array_new(4);
+   f->states = eina_array_new(4);
+   return f;
+}
+
+static void
+_fsm_free(Fsm *f)
+{
+   State *s;
+   Transit *t;
+
+   eina_stringshare_del(f->name);
+
+   while ((s = eina_array_pop(f->states)) != NULL)
+     _state_free(s);
+   eina_array_free(f->transitions);
+
+   while ((t = eina_array_pop(f->transitions)) != NULL)
+     _transit_free(t);
+   eina_array_free(f->states);
+
+   free(f);
+}
+
+static char
+_char_next_get(Parser *p)
+{
+   char c;
+
+   if (p->ptr > p->end) return EOF;
+
+   c = *(p->ptr++);
+   switch (c)
+     {
+      case '\0':
+      case EOF:
+         return EOF;
+
+      case '\n':
+         p->line++;
+         p->col = 1;
+         if (p->comments == COMMENT_SINGLE_LINE)
+           p->comments = COMMENT_NONE;
+         break;
+
+      default:
+         p->col++;
+         break;
+     }
+
+   return c;
+}
+
+static Eina_Bool
+_sm_block_is(const Parser *p)
+{
+   switch (p->sm)
+     {
+      case SM_NONE:
+      case SM_FSM:
+      case SM_TRANSITION_START:
+      case SM_STATE:
+      case SM_STATE_CB:
+         return EINA_TRUE;
+
+      default:
+         return EINA_FALSE;
+     }
+}
+
+Parser *
+estate_cc_parser_new(void)
+{
+   Parser *p;
+
+   p = calloc(1, sizeof(*p));
+   if (EINA_UNLIKELY(!p))
+     {
+        CRI("Failed to allocate Parser");
+        return NULL;
+     }
+   return p;
+}
+
+void
+estate_cc_parser_free(Parser *p)
+{
+   if (!p) return;
+   estate_cc_parser_file_unset(p);
+   free(p);
+}
+
+Eina_Bool
+estate_cc_parser_file_set(Parser     *p,
+                          char const *file)
+{
+   EINA_SAFETY_ON_NULL_RETURN_VAL(p, EINA_FALSE);
+   EINA_SAFETY_ON_NULL_RETURN_VAL(file, EINA_FALSE);
+
+   /* Open file with Eina_File */
+   p->ef = eina_file_open(file, EINA_FALSE);
+   if (EINA_UNLIKELY(!p->ef))
+     {
+        ERR("Failed to set parser with file \"%s\"", file);
+        goto fail;
+     }
+
+   /* Map contents of the file */
+   p->start = eina_file_map_all(p->ef, EINA_FILE_SEQUENTIAL);
+   if (EINA_UNLIKELY(!p->start))
+     {
+        CRI("Failed to map sequentially contents of file \"%s\"", file);
+        goto fail;
+     }
+   p->end = p->start + eina_file_size_get(p->ef);
+   p->ptr = p->start;
+   p->line = 1;
+   p->col = 1;
+   p->sm = SM_NONE;
+   p->has_token = EINA_FALSE;
+   p->stop_word = EINA_FALSE;
+
+   return EINA_TRUE;
+
+fail:
+   estate_cc_parser_file_unset(p);
+   return EINA_FALSE;
+}
+
+void
+estate_cc_parser_file_unset(Parser *p)
+{
+   EINA_SAFETY_ON_NULL_RETURN(p);
+   if (p->ef)
+     {
+        if (p->start) eina_file_map_free(p->ef, p->start);
+        eina_file_close(p->ef);
+        p->ef = NULL;
+     }
+}
+
+Eina_List *
+estate_cc_parser_parse(Parser *p)
+{
+   char buf[2048];
+   char c;
+   unsigned int k = 0;
+   Fsm *f = NULL;
+   Transit *t = NULL;
+   State *s = NULL;
+   struct _cb *cb = NULL;
+
+#define PARSE_ERROR(fmt_, ...) \
+   do { \
+      ERR("Parse Error (%u,%u): "fmt_, p->line, p->col - 1, ## __VA_ARGS__); \
+      goto fail; \
+   } while (0)
+
+   for (c = *(p->ptr); c != EOF; c = _char_next_get(p))
+     {
+        /* Comments... skip */
+        if (p->comments != COMMENT_NONE)
+          continue;
+
+        switch (c)
+          {
+             /* Check for comments */
+           case '/':
+              c = _char_next_get(p);
+              if (c == '/')
+                p->comments = COMMENT_SINGLE_LINE;
+              else if (c == '*')
+                p->comments = COMMENT_MULTIPLE_LINES;
+              else
+                {
+                   PARSE_ERROR("Invalid character");
+                   goto fail;
+                }
+              break;
+
+              /* Start of block */
+           case '{':
+              if (_sm_block_is(p))
+                p->has_token = EINA_TRUE;
+              else
+                PARSE_ERROR("Invalid '{'");
+              break;
+
+              /* End of property name */
+           case ':':
+              if ((p->sm == SM_STATE_CB) ||
+                  (p->sm == SM_TRANSITION_START))
+                p->has_token = EINA_TRUE;
+              else
+                PARSE_ERROR("Invalid ':' current state is %i", p->sm);
+              break;
+
+              /* End of propery */
+           case ';':
+              if ((p->sm == SM_STATE_CB_FUNC_PROP) ||
+                  (p->sm == SM_STATE_CB_DATA_PROP) ||
+                  (p->sm == SM_TRANSITION_TO))
+                p->has_token = EINA_TRUE;
+              else
+                PARSE_ERROR("Invalid ';'. SM %i", p->sm);
+              break;
+
+              /* Transition (from) -> (to) */
+           case '-':
+              if (p->sm != SM_TRANSITION_FROM)
+                PARSE_ERROR("Unexcepted character '-': not in a transition block."
+                            " SM: %i", p->sm);
+              c = _char_next_get(p);
+              if (c == '>')
+                p->has_token = EINA_TRUE;
+              else
+                PARSE_ERROR("Unexcepted character '%c'", c);
+              break;
+
+              /* End of block */
+           case '}':
+              switch (p->sm)
+                {
+                 case SM_STATE_CB:
+                    p->sm = SM_STATE;
+                    break;
+
+                 case SM_STATE:
+                    p->sm = SM_FSM;
+                    break;
+
+                 case SM_TRANSITION_START:
+                    p->sm = SM_FSM;
+                    break;
+
+                 case SM_FSM:
+                    p->sm = SM_NONE;
+                    break;
+
+                 default:
+                    PARSE_ERROR( "Unexpected end of block '}'");
+                }
+              break;
+
+              /* Whitespaces */
+           case ' ':
+           case '\n':
+           case '\r':
+           case '\t':
+              if (k != 0)
+                p->stop_word = EINA_TRUE;
+              break;
+
+              /* Read a token - cannot start with a digit */
+           case '0' ... '9':
+              if (k == 0)
+                PARSE_ERROR("Token cannot start with a digit");
+           case '_':
+           case 'a' ... 'z':
+           case 'A' ... 'Z':
+              if (p->stop_word)
+                PARSE_ERROR("Invalid start of token");
+              buf[k++] = c;
+              break;
+
+           default:
+              PARSE_ERROR("Invalid character '%c'", c);
+          }
+
+
+        /* Parsing */
+        if (p->has_token)
+          {
+             buf[k] = 0;
+             if (p->sm == SM_NONE)
+               {
+                  f = _fsm_new(buf, k);
+                  p->parse = eina_list_append(p->parse , f);
+                  p->sm = SM_FSM;
+               }
+             else if (p->sm == SM_FSM)
+               {
+                  if (!strcmp(buf, "transitions")) /* Block transitions */
+                    {
+                       p->sm = SM_TRANSITION_START;
+                    }
+                  else /* Definition of a state */
+                    {
+                       s = _state_new(buf, k);
+                       p->sm = SM_STATE;
+                    }
+               }
+             else if (p->sm == SM_STATE)
+               {
+                  if (!strcmp(buf, "enterer"))
+                    cb = &(s->enterer);
+                  else if (!strcmp(buf, "exiter"))
+                    cb = &(s->exiter);
+                  else if (!strcmp(buf, "transition"))
+                    cb = &(s->transition);
+                  else
+                    PARSE_ERROR("Invalid token [%s]", buf);
+                  p->sm = SM_STATE_CB;
+               }
+             else if (p->sm == SM_STATE_CB)
+               {
+                  if (!strcmp(buf, "func"))
+                    {
+                       if (cb->func)
+                         PARSE_ERROR("Func already specified");
+                       p->sm = SM_STATE_CB_FUNC_PROP;
+                    }
+                  else if (!strcmp(buf, "data"))
+                    {
+                       if (cb->data)
+                         PARSE_ERROR("Data already specified");
+                       p->sm = SM_STATE_CB_DATA_PROP;
+                    }
+                  else
+                    PARSE_ERROR("Invalid token [%s]", buf);
+               }
+             else if (p->sm == SM_STATE_CB_FUNC_PROP)
+               {
+                  cb->func = eina_stringshare_add_length(buf, k);
+                  p->sm = SM_STATE_CB;
+               }
+             else if (p->sm == SM_STATE_CB_DATA_PROP)
+               {
+                  cb->data = eina_stringshare_add_length(buf, k);
+                  p->sm = SM_STATE_CB;
+               }
+             else if (p->sm == SM_TRANSITION_START)
+               {
+                  t = _transit_new(buf, k);
+                  eina_array_push(f->transitions, t);
+                  p->sm = SM_TRANSITION_FROM;
+               }
+             else if (p->sm == SM_TRANSITION_FROM)
+               {
+                  t->from = eina_stringshare_add_length(buf, k);
+                  p->sm = SM_TRANSITION_TO;
+               }
+             else if (p->sm == SM_TRANSITION_TO)
+               {
+                  t->to = eina_stringshare_add_length(buf, k);
+                  p->sm = SM_TRANSITION_START;
+               }
+
+             p->has_token = EINA_FALSE;
+             p->stop_word = EINA_FALSE;
+             k = 0;
+          }
+     }
+
+   return p->parse;
+fail:
+   return NULL;
+}
+
+void
+estate_parser_cc_parse_free(Parser *p)
+{
+   EINA_SAFETY_ON_NULL_RETURN(p);
+
+   Fsm *fsm;
+   EINA_LIST_FREE(p->parse, fsm)
+      _fsm_free(fsm);
+}
+
+

@@ -109,3 +109,88 @@ estate_machine_check(Estate_Machine *mach)
    return EINA_TRUE;
 }
 
+EAPI Estate_State *
+estate_machine_current_state_get(const Estate_Machine *mach)
+{
+   EINA_SAFETY_ON_NULL_RETURN_VAL(mach, NULL);
+   return mach->current_state;
+}
+
+
+
+#if 0
+EAPI Eina_Bool
+estate_ecore_main_loop_enabled_set(Estate_Machine *mach,
+                                   Eina_Bool       set)
+{
+   EINA_SAFETY_ON_NULL_RETURN_VAL(mach, EINA_FALSE);
+   unsigned int i;
+
+   if (set)
+     {
+        if (mach->evt[0])
+          return EINA_TRUE;
+        else
+          {
+             mach->evt[0] = ecore_event_handler_add(ESTATE_EVENT_ENTERER, _deffer_cb, mach);
+             mach->evt[1] = ecore_event_handler_add(ESTATE_EVENT_EXITER, _deffer_cb, mach);
+             mach->evt[2] = ecore_event_handler_add(ESTATE_EVENT_TRANSITION, _deffer_cb, mach);
+             /* TODO check allocs */
+             return EINA_TRUE;
+          }
+     }
+   else
+     {
+        if (mach->evt[0])
+          {
+             for (i = 0; i < EINA_C_ARRAY_LENGTH(mach->evt); ++i)
+               ecore_event_handler_del(mach->evt[i]);
+             return EINA_TRUE;
+          }
+        else
+          return EINA_TRUE;
+     }
+}
+#endif
+
+static void
+_do_transition(const Estate_State      *st EINA_UNUSED,
+               const Estate_Transition *tr)
+{
+//   EINA_INLIST_FOREACH(st->cb[0]
+   if (tr->cb.func) tr->cb.func(tr->cb.data,
+                                ESTATE_CB_TYPE_TRANSITION, tr);
+}
+
+static Eina_Bool
+_estate_state_transition_do(const Estate_State *st,
+                            const char         *tr_name)
+{
+   EINA_SAFETY_ON_NULL_RETURN_VAL(st, EINA_FALSE);
+   EINA_SAFETY_ON_NULL_RETURN_VAL(tr_name, EINA_FALSE);
+
+   unsigned int i;
+   Estate_Transition *tr;
+
+   for (i = 0; i < st->transit_count; ++i)
+     {
+        tr = st->transit[i];
+        if (!strcmp(tr_name, tr->name))
+          {
+             _do_transition(st, tr);
+             return EINA_TRUE;
+          }
+     }
+
+   ERR("Nonexistant transition [%s] for state [%s]", tr_name, st->name);
+   return EINA_FALSE;
+}
+
+EAPI Eina_Bool
+estate_machine_transition_do(Estate_Machine *mach,
+                             const char     *name)
+{
+   EINA_SAFETY_ON_NULL_RETURN_VAL(mach, EINA_FALSE);
+   return _estate_state_transition_do(mach->current_state, name);
+}
+
