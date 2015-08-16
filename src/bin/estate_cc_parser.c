@@ -380,6 +380,7 @@ estate_cc_parser_parse(Parser *p)
                    else /* Definition of a state */
                      {
                         s = _state_new(buf, k);
+                        eina_array_push(f->states, s);
                         p->sm = SM_STATE;
                      }
                    break;
