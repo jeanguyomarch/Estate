@@ -9,6 +9,7 @@ main(int    argc,
    int ret = EXIT_FAILURE;
    char const *file;
    Parser *p;
+   Eina_List *parse;
 
    /* Init Eina */
    if (EINA_UNLIKELY(!eina_init()))
@@ -44,7 +45,8 @@ main(int    argc,
         goto parser_free;
      }
 
-   estate_cc_parser_parse(p);
+   parse = estate_cc_parser_parse(p);
+   estate_cc_parser_parse_free(p);
 
    ret = EXIT_SUCCESS;
 

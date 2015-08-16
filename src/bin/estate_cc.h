@@ -47,6 +47,7 @@ void estate_cc_parser_free(Parser *p);
 Eina_Bool estate_cc_parser_file_set(Parser *p, char const *file);
 void estate_cc_parser_file_unset(Parser *p);
 Eina_List *estate_cc_parser_parse(Parser *p);
+void estate_cc_parser_parse_free(Parser *p);
 
 
 #define CRI(...) EINA_LOG_DOM_CRIT(_estate_cc_dom, __VA_ARGS__)

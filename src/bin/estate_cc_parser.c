@@ -177,6 +177,7 @@ void
 estate_cc_parser_free(Parser *p)
 {
    if (!p) return;
+   estate_cc_parser_parse_free(p);
    estate_cc_parser_file_unset(p);
    free(p);
 }
@@ -363,78 +364,83 @@ estate_cc_parser_parse(Parser *p)
         if (p->has_token)
           {
              buf[k] = 0;
-             if (p->sm == SM_NONE)
+             switch (p->sm)
                {
-                  f = _fsm_new(buf, k);
-                  p->parse = eina_list_append(p->parse , f);
-                  p->sm = SM_FSM;
-               }
-             else if (p->sm == SM_FSM)
-               {
-                  if (!strcmp(buf, "transitions")) /* Block transitions */
-                    {
-                       p->sm = SM_TRANSITION_START;
-                    }
-                  else /* Definition of a state */
-                    {
-                       s = _state_new(buf, k);
-                       p->sm = SM_STATE;
-                    }
-               }
-             else if (p->sm == SM_STATE)
-               {
-                  if (!strcmp(buf, "enterer"))
-                    cb = &(s->enterer);
-                  else if (!strcmp(buf, "exiter"))
-                    cb = &(s->exiter);
-                  else if (!strcmp(buf, "transition"))
-                    cb = &(s->transition);
-                  else
-                    PARSE_ERROR("Invalid token [%s]", buf);
-                  p->sm = SM_STATE_CB;
-               }
-             else if (p->sm == SM_STATE_CB)
-               {
-                  if (!strcmp(buf, "func"))
-                    {
-                       if (cb->func)
-                         PARSE_ERROR("Func already specified");
-                       p->sm = SM_STATE_CB_FUNC_PROP;
-                    }
-                  else if (!strcmp(buf, "data"))
-                    {
-                       if (cb->data)
-                         PARSE_ERROR("Data already specified");
-                       p->sm = SM_STATE_CB_DATA_PROP;
-                    }
-                  else
-                    PARSE_ERROR("Invalid token [%s]", buf);
-               }
-             else if (p->sm == SM_STATE_CB_FUNC_PROP)
-               {
-                  cb->func = eina_stringshare_add_length(buf, k);
-                  p->sm = SM_STATE_CB;
-               }
-             else if (p->sm == SM_STATE_CB_DATA_PROP)
-               {
-                  cb->data = eina_stringshare_add_length(buf, k);
-                  p->sm = SM_STATE_CB;
-               }
-             else if (p->sm == SM_TRANSITION_START)
-               {
-                  t = _transit_new(buf, k);
-                  eina_array_push(f->transitions, t);
-                  p->sm = SM_TRANSITION_FROM;
-               }
-             else if (p->sm == SM_TRANSITION_FROM)
-               {
-                  t->from = eina_stringshare_add_length(buf, k);
-                  p->sm = SM_TRANSITION_TO;
-               }
-             else if (p->sm == SM_TRANSITION_TO)
-               {
-                  t->to = eina_stringshare_add_length(buf, k);
-                  p->sm = SM_TRANSITION_START;
+                case SM_NONE:
+                   f = _fsm_new(buf, k);
+                   p->parse = eina_list_append(p->parse , f);
+                   p->sm = SM_FSM;
+                   break;
+
+                case SM_FSM:
+                   if (!strcmp(buf, "transitions")) /* Block transitions */
+                     {
+                        p->sm = SM_TRANSITION_START;
+                     }
+                   else /* Definition of a state */
+                     {
+                        s = _state_new(buf, k);
+                        p->sm = SM_STATE;
+                     }
+                   break;
+
+                case SM_STATE:
+                   if (!strcmp(buf, "enterer"))
+                     cb = &(s->enterer);
+                   else if (!strcmp(buf, "exiter"))
+                     cb = &(s->exiter);
+                   else if (!strcmp(buf, "transition"))
+                     cb = &(s->transition);
+                   else
+                     PARSE_ERROR("Invalid token [%s]", buf);
+                   p->sm = SM_STATE_CB;
+                   break;
+
+                case SM_STATE_CB:
+                   if (!strcmp(buf, "func"))
+                     {
+                        if (cb->func)
+                          PARSE_ERROR("Func already specified");
+                        p->sm = SM_STATE_CB_FUNC_PROP;
+                     }
+                   else if (!strcmp(buf, "data"))
+                     {
+                        if (cb->data)
+                          PARSE_ERROR("Data already specified");
+                        p->sm = SM_STATE_CB_DATA_PROP;
+                     }
+                   else
+                     PARSE_ERROR("Invalid token [%s]", buf);
+                   break;
+
+                case SM_STATE_CB_FUNC_PROP:
+                   cb->func = eina_stringshare_add_length(buf, k);
+                   p->sm = SM_STATE_CB;
+                   break;
+
+                case SM_STATE_CB_DATA_PROP:
+                   cb->data = eina_stringshare_add_length(buf, k);
+                   p->sm = SM_STATE_CB;
+                   break;
+
+                case SM_TRANSITION_START:
+                   t = _transit_new(buf, k);
+                   eina_array_push(f->transitions, t);
+                   p->sm = SM_TRANSITION_FROM;
+                   break;
+
+                case SM_TRANSITION_FROM:
+                   t->from = eina_stringshare_add_length(buf, k);
+                   p->sm = SM_TRANSITION_TO;
+                   break;
+
+                case SM_TRANSITION_TO:
+                   t->to = eina_stringshare_add_length(buf, k);
+                   p->sm = SM_TRANSITION_START;
+                   break;
+
+                default:
+                   break;
                }
 
              p->has_token = EINA_FALSE;
@@ -449,13 +455,15 @@ fail:
 }
 
 void
-estate_parser_cc_parse_free(Parser *p)
+estate_cc_parser_parse_free(Parser *p)
 {
    EINA_SAFETY_ON_NULL_RETURN(p);
 
    Fsm *fsm;
+
+   if (!p->parse) return;
    EINA_LIST_FREE(p->parse, fsm)
       _fsm_free(fsm);
+   p->parse = NULL;
 }
-
 
