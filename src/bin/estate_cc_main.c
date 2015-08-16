@@ -104,6 +104,8 @@ main(int    argc,
         goto parser_free;
      }
 
+   if (verbosity >= 1)
+     estate_cc_data_print(parse);
 
    ret = EXIT_SUCCESS;
    estate_cc_parser_parse_free(p);
