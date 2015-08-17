@@ -14,10 +14,9 @@ typedef enum
    ESTATE_CB_TYPE_TRANSITION      = 2
 } Estate_Cb_Type;
 
-typedef void (*Estate_Cb)(void              *data,
-                //          Estate_Machine    *mach,
-                          Estate_Cb_Type     type,
-                          Estate_Transition *transition);
+typedef void (*Estate_Cb)(void                    *data,
+                          Estate_Cb_Type           type,
+                          const Estate_Transition *transition);
 
 
 EAPI int estate_init(void);
@@ -69,6 +68,11 @@ EAPI Eina_Bool
 estate_machine_check(Estate_Machine *mach);
 
 EAPI Estate_State *estate_machine_current_state_get(const Estate_Machine *mach);
+
+
+#define ESTATE_MACHINE_DECLARE(mach_) \
+   static Estate_Machine _fsm_ ## mach_; \
+   static Eina_Bool _estate_fsm_ ## mach_ ## _load(void)
 
 
 //EAPI Eina_Bool estate_ecore_main_loop_enabled_set(Estate_Machine *mach, Eina_Bool set);

@@ -25,13 +25,8 @@ struct _Estate_Machine
    //Eina_Mempool         *mempool;
 
    /* Arrays */
-   Estate_State         *states;
-   unsigned int          states_count;
-   unsigned int          st_curr;
-
-   Estate_Transition    *transit;
-   unsigned int          transit_count;
-   unsigned int          tr_curr;
+   Eina_Inarray *states;
+   Eina_Inarray *transit;
 
    Estate_State         *current_state;
    Eina_Hash            *data;
@@ -41,10 +36,9 @@ struct _Estate_Machine
 struct _Estate_State
 {
    const char       *name;
-   State_Cb_Wrapper *cb[2];
+   State_Cb_Wrapper  cb[3];
 
-   Estate_Transition  **transit;
-   unsigned int         transit_count;
+   Eina_Array       *transit;
 };
 
 struct _Estate_Transition

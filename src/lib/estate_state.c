@@ -30,20 +30,17 @@ estate_state_init(Estate_State             *st,
 
    unsigned int i;
 
-   st->transit = malloc(sizeof(Estate_Transition *) * transit_count);
+   st->transit = eina_array_new(transit_count);
    if (EINA_UNLIKELY(!st->transit))
      {
         CRI("Failed to create Transitions array");
         goto fail;
      }
-   st->transit_count = transit_count;
 
    for (i = 0; i < transit_count; ++i)
-     st->transit[i] = (Estate_Transition *)transitions[i];
+     eina_array_push(st->transit, transitions[i]);
 
    st->name = name;
-   for (i = 0; i < EINA_C_ARRAY_LENGTH(st->cb); ++i)
-     st->cb[i] = NULL;
 
    return EINA_TRUE;
 
@@ -56,7 +53,7 @@ EAPI void
 estate_state_deinit(Estate_State *st)
 {
    if (!st) return;
-   if (st->transit) free(st->transit);
+   if (st->transit) eina_array_free(st->transit);
 }
 
 EAPI const char *
@@ -66,30 +63,30 @@ estate_state_name_get(const Estate_State *st)
    return st->name;
 }
 
-EAPI void
-estate_state_cb_add(Estate_State   *st,
-                    Estate_Cb_Type  cb_type,
-                    Estate_Cb       func,
-                    void           *data)
-{
-   EINA_SAFETY_ON_NULL_RETURN(st);
-   EINA_SAFETY_ON_NULL_RETURN(func);
-
-   State_Cb_Wrapper *s;
-   Eina_Inlist *l;
-
-   s = malloc(sizeof(*s));
-   if (EINA_UNLIKELY(!s))
-     {
-        CRI("Failed to allocate State_Cb_Wrapper");
-        return;
-     }
-   s->func = func;
-   s->data = data;
-
-   if (st->cb[cb_type] == NULL)
-     l = eina_inlist_append(NULL, EINA_INLIST_GET(s));
-   else
-     l = eina_inlist_append(EINA_INLIST_GET(st->cb[cb_type]), EINA_INLIST_GET(s));
-}
+//EAPI void
+//estate_state_cb_add(Estate_State   *st,
+//                    Estate_Cb_Type  cb_type,
+//                    Estate_Cb       func,
+//                    void           *data)
+//{
+//   EINA_SAFETY_ON_NULL_RETURN(st);
+//   EINA_SAFETY_ON_NULL_RETURN(func);
+//
+//   State_Cb_Wrapper *s;
+//   Eina_Inlist *l;
+//
+//   s = malloc(sizeof(*s));
+//   if (EINA_UNLIKELY(!s))
+//     {
+//        CRI("Failed to allocate State_Cb_Wrapper");
+//        return;
+//     }
+//   s->func = func;
+//   s->data = data;
+//
+//  // if (st->cb[cb_type] == NULL)
+//  //   l = eina_inlist_append(NULL, EINA_INLIST_GET(s));
+//  // else
+//  //   l = eina_inlist_append(EINA_INLIST_GET(st->cb[cb_type]), EINA_INLIST_GET(s));
+//}
 

@@ -23,24 +23,20 @@ estate_machine_new(unsigned int states,
      }
 
    /* Pre-allocate states */
-   mach->states = malloc(sizeof(Estate_State) * states);
+   mach->states = eina_inarray_new(sizeof(Estate_State), states);
    if (EINA_UNLIKELY(!mach->states))
      {
         CRI("Failed to allocate Estate_State array");
         goto fail;
      }
-   mach->states_count = states;
-   mach->st_curr = 0;
 
    /* Pre-allocate transitions */
-   mach->transit = malloc(sizeof(Estate_Transition) * transitions);
+   mach->transit = eina_inarray_new(sizeof(Estate_Transition), transitions);
    if (EINA_UNLIKELY(!mach->transit))
      {
         CRI("Failed to allocate Estate_Transition array");
         goto fail;
      }
-   mach->transit_count = transitions;
-   mach->tr_curr = 0;
 
    /* No current state */
    mach->current_state = NULL;
@@ -56,8 +52,8 @@ EAPI void
 estate_machine_free(Estate_Machine *mach)
 {
    if (!mach) return;
-   free(mach->states);
-   free(mach->transit);
+   eina_inarray_free(mach->states);
+   eina_inarray_free(mach->transit);
    free(mach);
 }
 
@@ -68,15 +64,7 @@ estate_machine_state_add(Estate_Machine     *mach,
    EINA_SAFETY_ON_NULL_RETURN_VAL(mach, EINA_FALSE);
    EINA_SAFETY_ON_NULL_RETURN_VAL(state, EINA_FALSE);
 
-   if (mach->st_curr >= mach->states_count)
-     {
-        CRI("You tried to add state #%u but max is %u",
-            mach->st_curr, mach->states_count);
-        return EINA_FALSE;
-     }
-
-   memcpy(&(mach->states[mach->st_curr]), state, sizeof(Estate_State));
-   mach->st_curr++;
+   eina_inarray_push(mach->states, state);
    return EINA_TRUE;
 }
 
@@ -87,15 +75,8 @@ estate_machine_transition_add(Estate_Machine          *mach,
    EINA_SAFETY_ON_NULL_RETURN_VAL(mach, EINA_FALSE);
    EINA_SAFETY_ON_NULL_RETURN_VAL(tr, EINA_FALSE);
 
-   if (mach->tr_curr >= mach->transit_count)
-     {
-        CRI("You tried to add state #%u but max is %u",
-            mach->tr_curr, mach->transit_count);
-        return EINA_FALSE;
-     }
 
-   memcpy(&(mach->transit[mach->tr_curr]), tr, sizeof(Estate_Transition));
-   mach->tr_curr++;
+   eina_inarray_push(mach->transit, tr);
    return EINA_TRUE;
 
 }
@@ -105,7 +86,7 @@ estate_machine_check(Estate_Machine *mach)
 {
    EINA_SAFETY_ON_NULL_RETURN_VAL(mach, EINA_FALSE);
    /* TODO Check */
-   mach->current_state = &(mach->states[0]);
+   mach->current_state = eina_inarray_nth(mach->states, 0);
    return EINA_TRUE;
 }
 
@@ -170,11 +151,11 @@ _estate_state_transition_do(const Estate_State *st,
    EINA_SAFETY_ON_NULL_RETURN_VAL(tr_name, EINA_FALSE);
 
    unsigned int i;
+   Eina_Array_Iterator iter;
    Estate_Transition *tr;
 
-   for (i = 0; i < st->transit_count; ++i)
+   EINA_ARRAY_ITER_NEXT(st->transit, i, tr, iter)
      {
-        tr = st->transit[i];
         if (!strcmp(tr_name, tr->name))
           {
              _do_transition(st, tr);
