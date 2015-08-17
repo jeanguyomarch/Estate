@@ -51,6 +51,11 @@ void estate_cc_parser_parse_free(Parser *p);
 
 void estate_cc_data_print(Eina_List *fsm);
 
+Eina_Bool
+estate_cc_out_gi(Eina_List  *parse,
+                 const char *file,
+                 const char *include);
+
 #define CRI(...) EINA_LOG_DOM_CRIT(_estate_cc_dom, __VA_ARGS__)
 #define ERR(...) EINA_LOG_DOM_ERR(_estate_cc_dom, __VA_ARGS__)
 #define WRN(...) EINA_LOG_DOM_WARN(_estate_cc_dom, __VA_ARGS__)

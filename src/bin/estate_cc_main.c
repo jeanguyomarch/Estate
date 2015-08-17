@@ -6,6 +6,8 @@ int _estate_cc_dom = -1;
 static const struct option _options[] =
 {
      {"output",  required_argument, NULL, 'o'},
+     {"gc",      no_argument,       NULL, 'c'},
+     {"gi",      required_argument, NULL, 'i'},
      {"verbose", no_argument,       NULL, 'v'},
      {"help",    no_argument,       NULL, 'h'},
      {NULL,      0,                 NULL,  0}
@@ -16,12 +18,14 @@ _usage(char const *const prog,
        FILE       *      stream)
 {
    fprintf(stream,
-           "Usage: %s [OPTIONS] file\n"
+           "Usage: %s --gc|--gi [OPTIONS] file\n"
            "\n"
            "With the following options:\n"
-           "  -o|--output    specify the output file. stdout by default\n"
-           "  -v|--verbose   cumulative, increase the verbosity level\n"
-           "  -h|--help      display this message\n"
+           "  -o|--output  <file>  specify the output file. stdout by default\n"
+           "  -c|--gc              generates C code of states machines\n"
+           "  -i|--gi      <file>  generates a C boilerplate for callbacks\n"
+           "  -v|--verbose         cumulative, increase the verbosity level\n"
+           "  -h|--help            display this message\n"
            "\n",
            prog);
 }
@@ -33,20 +37,32 @@ main(int    argc,
    int ret = EXIT_FAILURE;
    char const *input;
    char const *output = NULL;
+   char const *include = NULL;
    Parser *p;
    Eina_List *parse;
    int c;
    unsigned int verbosity = 0;
+   Eina_Bool gc = EINA_FALSE;
+   Eina_Bool gi = EINA_FALSE;
 
    /* Getopt */
    while (1)
      {
-        c = getopt_long(argc, argv, "o:vh", _options, NULL);
+        c = getopt_long(argc, argv, "o:ci:vh", _options, NULL);
         if (c == -1) break;
         switch (c)
           {
            case 'o':
               output = optarg;
+              break;
+
+           case 'c':
+              gc = EINA_TRUE;
+              break;
+
+           case 'i':
+              gi = EINA_TRUE;
+              include = optarg;
               break;
 
            case 'v':
@@ -62,9 +78,23 @@ main(int    argc,
               goto end;
           }
      }
+
+   /* Check for provided parameters */
+   if ((gc == EINA_FALSE) && (gi == EINA_FALSE))
+     {
+        fprintf(stderr, "*** --gi or --gc must be specified\n");
+        goto end;
+     }
+   if (gc == gi)
+     {
+        fprintf(stderr, "*** --gi and --gc cannot be combined\n");
+        goto end;
+     }
+
+   /* Check for input */
    if (argc - optind != 1)
      {
-        _usage(argv[0], stderr);
+        fprintf(stderr, "*** %s needs a manadatory argument\n", argv[0]);
         goto end;
      }
    input = argv[optind];
@@ -106,6 +136,11 @@ main(int    argc,
 
    if (verbosity >= 1)
      estate_cc_data_print(parse);
+
+   if (gi)
+     {
+        estate_cc_out_gi(parse, output, include);
+     }
 
    ret = EXIT_SUCCESS;
    estate_cc_parser_parse_free(p);
