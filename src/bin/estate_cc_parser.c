@@ -1,5 +1,6 @@
 #include "estate_cc.h"
 
+
 enum
 {
    COMMENT_NONE         = 0,
@@ -39,79 +40,6 @@ struct _Parser
    Eina_Bool has_token;
 };
 
-static State *
-_state_new(const char *name,
-           const int   len)
-{
-   State *s;
-   s = calloc(1, sizeof(*s));
-   s->name = eina_stringshare_add_length(name, len);
-   return s;
-}
-
-static void
-_state_free(State *s)
-{
-   if (s->enterer.func) eina_stringshare_del(s->enterer.func);
-   if (s->enterer.data) eina_stringshare_del(s->enterer.data);
-   if (s->exiter.func) eina_stringshare_del(s->exiter.func);
-   if (s->exiter.data) eina_stringshare_del(s->exiter.data);
-   if (s->transition.func) eina_stringshare_del(s->transition.func);
-   if (s->transition.data) eina_stringshare_del(s->transition.data);
-   eina_stringshare_del(s->name);
-   free(s);
-}
-
-static Transit *
-_transit_new(const char *name,
-             const int   len)
-{
-   Transit *t;
-   t = calloc(1, sizeof(*t));
-   t->name = eina_stringshare_add_length(name, len);
-   return t;
-}
-
-static void
-_transit_free(Transit *t)
-{
-   eina_stringshare_del(t->name);
-   eina_stringshare_del(t->from);
-   eina_stringshare_del(t->to);
-   free(t);
-}
-
-static Fsm *
-_fsm_new(const char *name,
-         const int   len)
-{
-   /* TODO error cases */
-   Fsm *f;
-   f = calloc(1, sizeof(*f));
-   f->name = eina_stringshare_add_length(name, len);
-   f->transitions = eina_array_new(4);
-   f->states = eina_array_new(4);
-   return f;
-}
-
-static void
-_fsm_free(Fsm *f)
-{
-   State *s;
-   Transit *t;
-
-   eina_stringshare_del(f->name);
-
-   while ((s = eina_array_pop(f->states)) != NULL)
-     _state_free(s);
-   eina_array_free(f->transitions);
-
-   while ((t = eina_array_pop(f->transitions)) != NULL)
-     _transit_free(t);
-   eina_array_free(f->states);
-
-   free(f);
-}
 
 static char
 _char_next_get(Parser *p)
@@ -367,7 +295,7 @@ estate_cc_parser_parse(Parser *p)
              switch (p->sm)
                {
                 case SM_NONE:
-                   f = _fsm_new(buf, k);
+                   f = fsm_new(buf, k);
                    p->parse = eina_list_append(p->parse , f);
                    p->sm = SM_FSM;
                    break;
@@ -379,8 +307,10 @@ estate_cc_parser_parse(Parser *p)
                      }
                    else /* Definition of a state */
                      {
-                        s = _state_new(buf, k);
-                        eina_array_push(f->states, s);
+                        s = state_new(buf, k);
+                        if (eina_hash_find(f->states, s->name))
+                          PARSE_ERROR("State [%s] has already been defined", s->name);
+                        eina_hash_add(f->states, s->name, s);
                         p->sm = SM_STATE;
                      }
                    break;
@@ -425,8 +355,10 @@ estate_cc_parser_parse(Parser *p)
                    break;
 
                 case SM_TRANSITION_START:
-                   t = _transit_new(buf, k);
-                   eina_array_push(f->transitions, t);
+                   t = transit_new(buf, k);
+                   if (eina_hash_find(f->transitions, t->name))
+                     PARSE_ERROR("Transition [%s] already defined", t->name);
+                   eina_hash_add(f->transitions, t->name, t);
                    p->sm = SM_TRANSITION_FROM;
                    break;
 
@@ -464,7 +396,7 @@ estate_cc_parser_parse_free(Parser *p)
 
    if (!p->parse) return;
    EINA_LIST_FREE(p->parse, fsm)
-      _fsm_free(fsm);
+      fsm_free(fsm);
    p->parse = NULL;
 }
 

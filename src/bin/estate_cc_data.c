@@ -1,9 +1,10 @@
 #include "estate_cc.h"
 
 static Eina_Bool
-_each_transit_print_cb(const void *ctr   EINA_UNUSED,
-                       void       *data,
-                       void       *fdata EINA_UNUSED)
+_each_transit_print_cb(const Eina_Hash *hash  EINA_UNUSED,
+                       const void      *key   EINA_UNUSED,
+                       void            *data,
+                       void            *fdata EINA_UNUSED)
 {
    Transit *t = data;
    printf("++ TRANSITION: [%s] : [%s] -> [%s]\n", t->name, t->from, t->to);
@@ -12,9 +13,10 @@ _each_transit_print_cb(const void *ctr   EINA_UNUSED,
 }
 
 static Eina_Bool
-_each_state_print_cb(const void *ctr   EINA_UNUSED,
-                     void       *data,
-                     void       *fdata EINA_UNUSED)
+_each_state_print_cb(const Eina_Hash *hash  EINA_UNUSED,
+                     const void      *key   EINA_UNUSED,
+                     void            *data,
+                     void            *fdata EINA_UNUSED)
 {
    State *s = data;
    printf("++ STATE: [%s]\n"
@@ -38,8 +40,8 @@ estate_cc_data_print(Eina_List *fsm)
    EINA_LIST_FOREACH(fsm, l, f)
      {
         printf("+ FSM: [%s]\n", f->name);
-        eina_array_foreach(f->transitions, _each_transit_print_cb, NULL);
-        eina_array_foreach(f->states, _each_state_print_cb, NULL);
+        eina_hash_foreach(f->transitions, _each_transit_print_cb, NULL);
+        eina_hash_foreach(f->states, _each_state_print_cb, NULL);
      }
 }
 

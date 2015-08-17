@@ -7,9 +7,10 @@ typedef struct
 } Fsm_Wrapper;
 
 static Eina_Bool
-_each_states_gi_cb(const void *ctr   EINA_UNUSED,
-                   void       *data,
-                   void       *fdata)
+_each_states_gi_cb(const Eina_Hash *hash   EINA_UNUSED,
+                   const void      *key    EINA_UNUSED,
+                   void            *data,
+                   void            *fdata)
 {
    Fsm_Wrapper *wrap = fdata;
    State *s = data;
@@ -54,9 +55,10 @@ _each_states_gi_cb(const void *ctr   EINA_UNUSED,
 }
 
 static Eina_Bool
-_each_transit_gc_init_cb(const void *ctr   EINA_UNUSED,
-                         void       *data,
-                         void       *fdata)
+_each_transit_gc_init_cb(const Eina_Hash *hash   EINA_UNUSED,
+                         const void      *key    EINA_UNUSED,
+                         void            *data,
+                         void            *fdata)
 {
    Fsm_Wrapper *wrap = fdata;
    Transit *t = data;
@@ -67,9 +69,10 @@ _each_transit_gc_init_cb(const void *ctr   EINA_UNUSED,
 }
 
 static Eina_Bool
-_each_states_gc_init_cb(const void *ctr   EINA_UNUSED,
-                        void       *data,
-                        void       *fdata)
+_each_states_gc_init_cb(const Eina_Hash *hash   EINA_UNUSED,
+                        const void      *key    EINA_UNUSED,
+                        void            *data,
+                        void            *fdata)
 {
    Fsm_Wrapper*wrap = fdata;
    State *s = data;
@@ -80,9 +83,10 @@ _each_states_gc_init_cb(const void *ctr   EINA_UNUSED,
 }
 
 static Eina_Bool
-_each_states_gc_fill_cb(const void *ctr   EINA_UNUSED,
-                        void       *data,
-                        void       *fdata)
+_each_states_gc_fill_cb(const Eina_Hash *hash  EINA_UNUSED,
+                        const void      *key   EINA_UNUSED,
+                        void            *data,
+                        void            *fdata)
 {
    Fsm_Wrapper *wrap = fdata;
    State *s = data;
@@ -146,7 +150,7 @@ estate_cc_out_gi(Eina_List  *parse,
                 "\n",
                 fsm->name, fsm->name, fsm->name);
 
-        eina_array_foreach(fsm->states, _each_states_gi_cb, &wrap);
+        eina_hash_foreach(fsm->states, _each_states_gi_cb, &wrap);
      }
    fprintf(f, "#include \"%s\"\n\n", include);
 
@@ -193,11 +197,12 @@ estate_cc_out_gc(Eina_List  *parse,
                 "_estate_fsm_%s_load(void)\n"
                 "{\n", fsm->name);
 
-        eina_array_foreach(fsm->states, _each_states_gc_init_cb, &wrap);
-        eina_array_foreach(fsm->states, _each_transit_gc_init_cb, &wrap);
+        eina_hash_foreach(fsm->states, _each_states_gc_init_cb, &wrap);
+        eina_hash_foreach(fsm->transitions, _each_transit_gc_init_cb, &wrap);
+
         fprintf(f, "\n");
 
-        eina_array_foreach(fsm->states, _each_states_gc_fill_cb, &wrap);
+        eina_hash_foreach(fsm->states, _each_states_gc_fill_cb, &wrap);
 
         fprintf(f, "}\n\n");
      }

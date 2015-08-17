@@ -2,6 +2,7 @@
 #include <getopt.h>
 
 int _estate_cc_dom = -1;
+static unsigned int _verbosity = 0;
 
 static const struct option _options[] =
 {
@@ -30,6 +31,12 @@ _usage(char const *const prog,
            prog);
 }
 
+unsigned int
+estate_cc_verbosity_get(void)
+{
+   return _verbosity;
+}
+
 int
 main(int    argc,
      char **argv)
@@ -41,7 +48,6 @@ main(int    argc,
    Parser *p;
    Eina_List *parse;
    int c;
-   unsigned int verbosity = 0;
    Eina_Bool gc = EINA_FALSE;
    Eina_Bool gi = EINA_FALSE;
 
@@ -66,7 +72,7 @@ main(int    argc,
               break;
 
            case 'v':
-              verbosity++;
+              _verbosity++;
               break;
 
            case 'h':
@@ -134,8 +140,10 @@ main(int    argc,
         goto parser_free;
      }
 
-   if (verbosity >= 1)
+   if (_verbosity >= 1)
      estate_cc_data_print(parse);
+
+   estate_cc_check_states(parse);
 
    if (gi)
      estate_cc_out_gi(parse, output, include);
