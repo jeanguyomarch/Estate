@@ -34,6 +34,7 @@ struct _Fsm
    Eina_Stringshare *name;
    Eina_Hash *transitions;
    Eina_Hash *states;
+   Eina_Stringshare *init;
 };
 
 

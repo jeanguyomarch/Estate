@@ -19,7 +19,8 @@ typedef enum
    SM_STATE_EOB                 = 6,
    SM_STATE_CB                  = 7,
    SM_STATE_CB_FUNC_PROP        = 8,
-   SM_STATE_CB_DATA_PROP        = 9
+   SM_STATE_CB_DATA_PROP        = 9,
+   SM_STATE_PROPERTY            = 10
 } Sm;
 
 struct _Parser
@@ -80,6 +81,7 @@ _sm_block_is(const Parser *p)
       case SM_TRANSITION_START:
       case SM_STATE:
       case SM_STATE_CB:
+      case SM_STATE_PROPERTY:
          return EINA_TRUE;
 
       default:
@@ -206,6 +208,14 @@ estate_cc_parser_parse(Parser *p)
                 PARSE_ERROR("Invalid '{'");
               break;
 
+              /* Start of state property */
+           case '@':
+              if (p->sm == SM_FSM)
+                p->has_token = EINA_TRUE;
+              else
+                PARSE_ERROR("Unexpected '@'. SM = %i", p->sm);
+              break;
+
               /* End of property name */
            case ':':
               if ((p->sm == SM_STATE_CB) ||
@@ -311,7 +321,13 @@ estate_cc_parser_parse(Parser *p)
                         if (eina_hash_find(f->states, s->name))
                           PARSE_ERROR("State [%s] has already been defined", s->name);
                         eina_hash_add(f->states, s->name, s);
-                        p->sm = SM_STATE;
+
+                        /* If there is a property, start parse it.
+                         * Otherwise, parse the state */
+                        if (c == '@')
+                          p->sm = SM_STATE_PROPERTY;
+                        else
+                          p->sm = SM_STATE;
                      }
                    break;
 
@@ -324,7 +340,23 @@ estate_cc_parser_parse(Parser *p)
                      cb = &(s->transition);
                    else
                      PARSE_ERROR("Invalid token [%s]", buf);
+
                    p->sm = SM_STATE_CB;
+                   break;
+
+                case SM_STATE_PROPERTY:
+                   if (!strcmp(buf, "init"))
+                     {
+                        if (f->init)
+                          PARSE_ERROR("Duplicated property @init");
+                        else
+                          {
+                             f->init = eina_stringshare_add(s->name);
+                             p->sm = SM_STATE;
+                          }
+                     }
+                   else
+                     PARSE_ERROR("Invalid property [@%s]", buf);
                    break;
 
                 case SM_STATE_CB:
