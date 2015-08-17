@@ -119,12 +119,19 @@ main(int    argc,
         goto eina_shut;
      }
 
+   /* Init cache check */
+   if (EINA_UNLIKELY(!estate_cc_check_init()))
+     {
+        EINA_LOG_CRIT("Failed to init check cache");
+        goto log_shut;
+     }
+
    /* Setup parser */
    p = estate_cc_parser_new();
    if (EINA_UNLIKELY(!p))
      {
         CRI("Failed to create parser");
-        goto log_shut;
+        goto check_free;
      }
    if (EINA_UNLIKELY(!estate_cc_parser_file_set(p, input)))
      {
@@ -154,6 +161,8 @@ main(int    argc,
    estate_cc_parser_parse_free(p);
 parser_free:
    estate_cc_parser_free(p);
+check_free:
+   estate_cc_check_shutdown();
 log_shut:
    estate_cc_log_shutdown();
 eina_shut:

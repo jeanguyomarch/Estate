@@ -70,6 +70,9 @@ void transit_free(Transit *t);
 Fsm *fsm_new(const char *name, const int len);
 void fsm_free(Fsm *f);
 
+Eina_Bool estate_cc_check_init(void);
+void estate_cc_check_shutdown(void);
+
 
 #define CRI(...) EINA_LOG_DOM_CRIT(_estate_cc_dom, __VA_ARGS__)
 #define ERR(...) EINA_LOG_DOM_ERR(_estate_cc_dom, __VA_ARGS__)
