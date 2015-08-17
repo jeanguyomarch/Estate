@@ -56,6 +56,10 @@ estate_cc_out_gi(Eina_List  *parse,
                  const char *file,
                  const char *include);
 
+Eina_Bool
+estate_cc_out_gc(Eina_List  *parse,
+                 const char *file);
+
 #define CRI(...) EINA_LOG_DOM_CRIT(_estate_cc_dom, __VA_ARGS__)
 #define ERR(...) EINA_LOG_DOM_ERR(_estate_cc_dom, __VA_ARGS__)
 #define WRN(...) EINA_LOG_DOM_WARN(_estate_cc_dom, __VA_ARGS__)

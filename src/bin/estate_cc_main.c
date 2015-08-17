@@ -138,9 +138,9 @@ main(int    argc,
      estate_cc_data_print(parse);
 
    if (gi)
-     {
-        estate_cc_out_gi(parse, output, include);
-     }
+     estate_cc_out_gi(parse, output, include);
+   if (gc)
+     estate_cc_out_gc(parse, output);
 
    ret = EXIT_SUCCESS;
    estate_cc_parser_parse_free(p);
