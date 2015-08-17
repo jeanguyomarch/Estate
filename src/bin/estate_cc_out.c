@@ -69,7 +69,7 @@ estate_cc_out_gi(Eina_List  *parse,
      {
         eina_array_foreach(fsm->states, _each_states_gi_cb, f);
      }
-   fprintf(f, "#include \"%s\"\n", include);
+   fprintf(f, "#include \"%s\"\n\n", include);
 
    fflush(f);
    if (file)
