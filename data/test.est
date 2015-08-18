@@ -6,9 +6,7 @@ tcp {
    }
    S2{
    }
-   S3 {
-   }
-   S1 {
+   S1 @init {
       enterer {
          func: func1;
          data: data;
