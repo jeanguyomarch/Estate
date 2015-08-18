@@ -20,6 +20,12 @@ struct _State
       Eina_Stringshare *func;
       Eina_Stringshare *data;
    } enterer, exiter, transition;
+
+   /* For model checking */
+   struct {
+      unsigned int from;
+      unsigned int to;
+   } check;
 };
 
 struct _Transit
@@ -70,9 +76,6 @@ Transit *transit_new(const char *name, const int len);
 void transit_free(Transit *t);
 Fsm *fsm_new(const char *name, const int len);
 void fsm_free(Fsm *f);
-
-Eina_Bool estate_cc_check_init(void);
-void estate_cc_check_shutdown(void);
 
 
 #define CRI(...) EINA_LOG_DOM_CRIT(_estate_cc_dom, __VA_ARGS__)
