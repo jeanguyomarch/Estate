@@ -101,12 +101,12 @@ _each_states_gc_fill_cb(const Eina_Hash *hash  EINA_UNUSED,
            "   s_%s.cb[ESTATE_CB_TYPE_TRANSITION].data = %s;\n"
            "\n",
            s->name, s->name,
-           s->name, s->enterer.func,
-           s->name, s->enterer.data,
-           s->name, s->exiter.func,
-           s->name, s->exiter.data,
-           s->name, s->transition.func,
-           s->name, s->transition.data);
+           s->name, s->enterer.func ?: "NULL",
+           s->name, s->enterer.data ?: "NULL",
+           s->name, s->exiter.func ?: "NULL",
+           s->name, s->exiter.data ?: "NULL",
+           s->name, s->transition.func ?: "NULL",
+           s->name, s->transition.data ?: "NULL");
 
    return EINA_TRUE;
 }
