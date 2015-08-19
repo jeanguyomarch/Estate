@@ -13,7 +13,6 @@ typedef enum
    SM_NONE = 0,
    SM_FSM,
    SM_TRANSITIONS,
-   SM_TRANSITIONS_MODEL,
    SM_TRANSITION_START,
    SM_TRANSITION_FROM,
    SM_TRANSITION_TO,
@@ -81,7 +80,7 @@ _sm_block_is(const Parser *p)
      {
       case SM_NONE:
       case SM_FSM:
-      case SM_TRANSITIONS_MODEL:
+      case SM_TRANSITIONS:
       case SM_TRANSITION_START:
       case SM_STATE:
       case SM_STATES:
@@ -268,12 +267,12 @@ estate_cc_parser_parse(Parser *p)
                     p->sm = SM_FSM;
                     break;
 
-                 case SM_TRANSITIONS_MODEL:
+                 case SM_TRANSITIONS:
                     p->sm = SM_FSM;
                     break;
 
                  case SM_TRANSITION_START:
-                    p->sm = SM_TRANSITIONS_MODEL;
+                    p->sm = SM_TRANSITIONS;
                     break;
 
                  case SM_FSM:
@@ -325,7 +324,7 @@ estate_cc_parser_parse(Parser *p)
 
                 case SM_FSM:
                    if (!strcmp(buf, "transitions")) /* Block transitions */
-                     p->sm = SM_TRANSITIONS_MODEL;
+                     p->sm = SM_TRANSITIONS;
                    else if (!strcmp(buf, "states")) /* Block states */
                      p->sm = SM_STATES;
                    else
@@ -401,7 +400,7 @@ estate_cc_parser_parse(Parser *p)
                    p->sm = SM_STATE_CB;
                    break;
 
-                case SM_TRANSITIONS_MODEL:
+                case SM_TRANSITIONS:
                    if (!strcmp(buf, "model"))
                      p->sm = SM_TRANSITION_START;
                    else
