@@ -1,19 +1,5 @@
 #include "estate_private.h"
 
-#if 0
-static void
-_estate_state_cb_call(const Estate_State         *st,
-                      const Estate_State_Cb_Type  cb_type)
-{
-   Eina_Inlist *l = EINA_INLIST_GET(st->cb[cb_type]);
-   State_Cb_Wrapper *wrapper;
-
-   EINA_INLIST_FOREACH(l, wrapper)
-      wrapper->func(wrapper->data);
-}
-#endif
-
-
 /*============================================================================*
  *                                 Public API                                 *
  *============================================================================*/
@@ -63,30 +49,18 @@ estate_state_name_get(const Estate_State *st)
    return st->name;
 }
 
-//EAPI void
-//estate_state_cb_add(Estate_State   *st,
-//                    Estate_Cb_Type  cb_type,
-//                    Estate_Cb       func,
-//                    void           *data)
-//{
-//   EINA_SAFETY_ON_NULL_RETURN(st);
-//   EINA_SAFETY_ON_NULL_RETURN(func);
-//
-//   State_Cb_Wrapper *s;
-//   Eina_Inlist *l;
-//
-//   s = malloc(sizeof(*s));
-//   if (EINA_UNLIKELY(!s))
-//     {
-//        CRI("Failed to allocate State_Cb_Wrapper");
-//        return;
-//     }
-//   s->func = func;
-//   s->data = data;
-//
-//  // if (st->cb[cb_type] == NULL)
-//  //   l = eina_inlist_append(NULL, EINA_INLIST_GET(s));
-//  // else
-//  //   l = eina_inlist_append(EINA_INLIST_GET(st->cb[cb_type]), EINA_INLIST_GET(s));
-//}
+void
+_estate_state_cb_call(Estate_Machine          *mach,
+                      Estate_State            *st,
+                      const Estate_Transition *tr,
+                      Estate_Cb_Type           type)
+{
+   Estate_Cb_Wrapper *wrp = &(st->cb[type]);
+
+   if (wrp->func)
+     {
+        _estate_misc_cb_cache(mach, wrp);
+        wrp->func(wrp->data, type, tr);
+     }
+}
 

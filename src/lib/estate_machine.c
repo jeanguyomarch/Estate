@@ -23,7 +23,7 @@ estate_machine_new(unsigned int states,
      }
 
    /* Pre-allocate states */
-   mach->states = eina_inarray_new(sizeof(Estate_State), states);
+   mach->states = eina_array_new(states);
    if (EINA_UNLIKELY(!mach->states))
      {
         CRI("Failed to allocate Estate_State array");
@@ -31,10 +31,18 @@ estate_machine_new(unsigned int states,
      }
 
    /* Pre-allocate transitions */
-   mach->transit = eina_inarray_new(sizeof(Estate_Transition), transitions);
+   mach->transit = eina_array_new(transitions);
    if (EINA_UNLIKELY(!mach->transit))
      {
         CRI("Failed to allocate Estate_Transition array");
+        goto fail;
+     }
+
+   /* Create hash tha will contain data */
+   mach->data = eina_hash_stringshared_new(NULL);
+   if (EINA_UNLIKELY(!mach->data))
+     {
+        CRI("Failed to create Eina_Hash");
         goto fail;
      }
 
@@ -52,8 +60,9 @@ EAPI void
 estate_machine_free(Estate_Machine *mach)
 {
    if (!mach) return;
-   eina_inarray_free(mach->states);
-   eina_inarray_free(mach->transit);
+   if (mach->data) eina_hash_free(mach->data);
+   if (mach->states) eina_array_free(mach->states);
+   if (mach->transit) eina_array_free(mach->transit);
    free(mach);
 }
 
@@ -64,7 +73,7 @@ estate_machine_state_add(Estate_Machine     *mach,
    EINA_SAFETY_ON_NULL_RETURN_VAL(mach, EINA_FALSE);
    EINA_SAFETY_ON_NULL_RETURN_VAL(state, EINA_FALSE);
 
-   eina_inarray_push(mach->states, state);
+   eina_array_push(mach->states, state);
    return EINA_TRUE;
 }
 
@@ -76,18 +85,9 @@ estate_machine_transition_add(Estate_Machine          *mach,
    EINA_SAFETY_ON_NULL_RETURN_VAL(tr, EINA_FALSE);
 
 
-   eina_inarray_push(mach->transit, tr);
+   eina_array_push(mach->transit, tr);
    return EINA_TRUE;
 
-}
-
-EAPI Eina_Bool
-estate_machine_check(Estate_Machine *mach)
-{
-   EINA_SAFETY_ON_NULL_RETURN_VAL(mach, EINA_FALSE);
-   /* TODO Check */
-   mach->current_state = eina_inarray_nth(mach->states, 0);
-   return EINA_TRUE;
 }
 
 EAPI Estate_State *
@@ -97,6 +97,37 @@ estate_machine_current_state_get(const Estate_Machine *mach)
    return mach->current_state;
 }
 
+EAPI Eina_Bool
+estate_machine_data_set(Estate_Machine *mach,
+                        const char     *key,
+                        const void     *value)
+{
+   EINA_SAFETY_ON_NULL_RETURN_VAL(mach,  EINA_FALSE);
+   EINA_SAFETY_ON_NULL_RETURN_VAL(key,   EINA_FALSE);
+   EINA_SAFETY_ON_NULL_RETURN_VAL(value, EINA_FALSE);
+
+   Eina_Stringshare *shr;
+
+   shr = eina_stringshare_add(key);
+   if (eina_hash_find(mach->data, shr) != NULL)
+     {
+        ERR("You required to register data \"%s\", but it is already "
+            "reserverd", shr);
+        goto fail;
+     }
+
+   if (!eina_hash_add(mach->data, shr, value))
+     {
+        ERR("Failed to register data \"%s\" for value <%p>", shr, value);
+        goto fail;
+     }
+
+   return EINA_TRUE;
+
+fail:
+   eina_stringshare_del(shr);
+   return EINA_FALSE;
+}
 
 
 #if 0

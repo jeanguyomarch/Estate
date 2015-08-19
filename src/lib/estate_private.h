@@ -11,13 +11,13 @@ extern int ESTATE_EVENT_EXITER;
 extern int ESTATE_EVENT_TRANSITION;
 #endif
 
-typedef struct _State_Cb_Wrapper State_Cb_Wrapper;
+typedef struct _Estate_Cb_Wrapper Estate_Cb_Wrapper;
 
-struct _State_Cb_Wrapper
+struct _Estate_Cb_Wrapper
 {
-   EINA_INLIST;
-   Estate_Cb       func;
-   void           *data;
+   Estate_Cb             func;
+   void                 *data;
+   Eina_Stringshare     *key;
 };
 
 struct _Estate_Machine
@@ -25,8 +25,8 @@ struct _Estate_Machine
    //Eina_Mempool         *mempool;
 
    /* Arrays */
-   Eina_Inarray *states;
-   Eina_Inarray *transit;
+   Eina_Array *states;
+   Eina_Array *transit;
 
    Estate_State         *current_state;
    Eina_Hash            *data;
@@ -35,24 +35,26 @@ struct _Estate_Machine
 
 struct _Estate_State
 {
-   const char       *name;
-   State_Cb_Wrapper  cb[3];
+   Eina_Stringshare       *name;
+   Estate_Cb_Wrapper cb[2];
 
-   Eina_Array       *transit;
+   Eina_Array *transit;
 };
 
 struct _Estate_Transition
 {
-   const char *name;
+   Eina_Stringshare *name;
 
    Estate_State *from;
    Estate_State *to;
+   Estate_Machine *mach;
 
-   struct {
-      Estate_Cb   func;
-      void       *data;
-   } cb;
+   Estate_Cb_Wrapper cb;
 };
+
+Eina_Bool _estate_misc_cb_cache(Estate_Machine *mach, Estate_Cb_Wrapper *wrp);
+
+void _estate_state_cb_call(Estate_Machine *mach, Estate_State *st, const Estate_Transition *tr, Estate_Cb_Type type);
 
 #define CRI(...) EINA_LOG_DOM_CRIT(_estate_log_dom, __VA_ARGS__)
 #define ERR(...) EINA_LOG_DOM_ERR(_estate_log_dom, __VA_ARGS__)

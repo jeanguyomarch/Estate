@@ -57,6 +57,11 @@ EAPI void
 estate_machine_free(Estate_Machine *mach);
 
 EAPI Eina_Bool
+estate_machine_data_set(Estate_Machine *mach,
+                        const char     *key,
+                        const void     *value);
+
+EAPI Eina_Bool
 estate_machine_state_add(Estate_Machine     *mach,
                          const Estate_State *state);
 
@@ -69,6 +74,7 @@ estate_machine_check(Estate_Machine *mach);
 
 EAPI Estate_State *estate_machine_current_state_get(const Estate_Machine *mach);
 
+EAPI Eina_Mempool *estate_mempool_add(void);
 
 #define ESTATE_MACHINE_DECLARE(mach_) \
    static Estate_Machine _fsm_ ## mach_; \
