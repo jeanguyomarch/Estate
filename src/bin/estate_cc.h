@@ -7,19 +7,24 @@ typedef struct _Parser Parser;
 typedef struct _Fsm Fsm;
 typedef struct _Transit Transit;
 typedef struct _State State;
+typedef struct _Cb Cb;
 
 typedef enum
 {
    PARSER_CODE_OK = 0
 } Parser_Code;
 
+struct _Cb
+{
+   Eina_Stringshare *func;
+   Eina_Stringshare *data;
+};
+
 struct _State
 {
    Eina_Stringshare *name;
-   struct _cb {
-      Eina_Stringshare *func;
-      Eina_Stringshare *data;
-   } enterer, exiter, transition;
+   Cb enterer;
+   Cb exiter;
 
    /* For model checking */
    struct {
@@ -33,6 +38,8 @@ struct _Transit
    Eina_Stringshare *name;
    Eina_Stringshare *from;
    Eina_Stringshare *to;
+
+   Cb cb;
 };
 
 struct _Fsm

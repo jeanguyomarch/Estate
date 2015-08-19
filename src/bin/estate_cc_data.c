@@ -7,7 +7,10 @@ _each_transit_print_cb(const Eina_Hash *hash  EINA_UNUSED,
                        void            *fdata EINA_UNUSED)
 {
    Transit *t = data;
-   printf("++ TRANSITION: [%s] : [%s] -> [%s]\n", t->name, t->from, t->to);
+   printf("++ TRANSITION: [%s] : [%s] -> [%s]\n"
+          "+++ transition: [%s], [%s]\n",
+          t->name, t->from, t->to,
+          t->cb.func, t->cb.data);
 
    return EINA_TRUE;
 }
@@ -21,12 +24,10 @@ _each_state_print_cb(const Eina_Hash *hash  EINA_UNUSED,
    State *s = data;
    printf("++ STATE: [%s]\n"
           "+++ enterer: [%s], [%s]\n"
-          "+++ exiter: [%s], [%s]\n"
-          "+++ transition: [%s], [%s]\n",
+          "+++ exiter: [%s], [%s]\n",
           s->name,
           s->enterer.func, s->enterer.data,
-          s->exiter.func, s->exiter.data,
-          s->transition.func, s->transition.data);
+          s->exiter.func, s->exiter.data);
 
    return EINA_TRUE;
 }

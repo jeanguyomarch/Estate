@@ -17,8 +17,6 @@ state_free(State *s)
    if (s->enterer.data) eina_stringshare_del(s->enterer.data);
    if (s->exiter.func) eina_stringshare_del(s->exiter.func);
    if (s->exiter.data) eina_stringshare_del(s->exiter.data);
-   if (s->transition.func) eina_stringshare_del(s->transition.func);
-   if (s->transition.data) eina_stringshare_del(s->transition.data);
    eina_stringshare_del(s->name);
    free(s);
 }
@@ -39,6 +37,8 @@ transit_free(Transit *t)
    eina_stringshare_del(t->name);
    eina_stringshare_del(t->from);
    eina_stringshare_del(t->to);
+   if (t->cb.func) eina_stringshare_del(t->cb.func);
+   if (t->cb.data) eina_stringshare_del(t->cb.data);
    free(t);
 }
 

@@ -16,6 +16,10 @@ typedef enum
    SM_TRANSITION_START,
    SM_TRANSITION_FROM,
    SM_TRANSITION_TO,
+   SM_TRANSITION,
+   SM_TRANSITION_CB,
+   SM_TRANSITION_CB_FUNC_PROP,
+   SM_TRANSITION_CB_DATA_PROP,
    SM_STATES,
    SM_STATE,
    SM_STATE_EOB,
@@ -82,6 +86,7 @@ _sm_block_is(const Parser *p)
       case SM_FSM:
       case SM_TRANSITIONS:
       case SM_TRANSITION_START:
+      case SM_TRANSITION:
       case SM_STATE:
       case SM_STATES:
       case SM_STATE_CB:
@@ -174,7 +179,8 @@ estate_cc_parser_parse(Parser *p)
    Fsm *f = NULL;
    Transit *t = NULL;
    State *s = NULL;
-   struct _cb *cb = NULL;
+   Cb *cb = NULL;
+   Eina_Stringshare *sh;
 
 #define PARSE_ERROR(fmt_, ...) \
    do { \
@@ -233,6 +239,8 @@ estate_cc_parser_parse(Parser *p)
            case ';':
               if ((p->sm == SM_STATE_CB_FUNC_PROP) ||
                   (p->sm == SM_STATE_CB_DATA_PROP) ||
+                  (p->sm == SM_TRANSITION_CB_FUNC_PROP) ||
+                  (p->sm == SM_TRANSITION_CB_DATA_PROP) ||
                   (p->sm == SM_TRANSITION_TO))
                 p->has_token = EINA_TRUE;
               else
@@ -272,6 +280,14 @@ estate_cc_parser_parse(Parser *p)
                     break;
 
                  case SM_TRANSITION_START:
+                    p->sm = SM_TRANSITIONS;
+                    break;
+
+                 case SM_TRANSITION_CB:
+                    p->sm = SM_TRANSITION;
+                    break;
+
+                 case SM_TRANSITION:
                     p->sm = SM_TRANSITIONS;
                     break;
 
@@ -350,8 +366,6 @@ estate_cc_parser_parse(Parser *p)
                      cb = &(s->enterer);
                    else if (!strcmp(buf, "exiter"))
                      cb = &(s->exiter);
-                   else if (!strcmp(buf, "transition"))
-                     cb = &(s->transition);
                    else
                      PARSE_ERROR("Invalid token [%s]", buf);
 
@@ -404,7 +418,48 @@ estate_cc_parser_parse(Parser *p)
                    if (!strcmp(buf, "model"))
                      p->sm = SM_TRANSITION_START;
                    else
-                     PARSE_ERROR("Unexpected token [%s]", buf);
+                     {
+                        sh = eina_stringshare_add_length(buf, k);
+                        t = eina_hash_find(f->transitions, sh);
+                        if (!t)
+                          PARSE_ERROR("Transition [%s] has not been previously defined", sh);
+                        eina_stringshare_del(sh);
+                        p->sm = SM_TRANSITION;
+                     }
+                   break;
+
+                case SM_TRANSITION:
+                   if (!strcmp(buf, "cb"))
+                     p->sm = SM_TRANSITION_CB;
+                   else
+                     PARSE_ERROR("Invalid token [%s]", buf);
+                   break;
+
+                case SM_TRANSITION_CB:
+                   if (!strcmp(buf, "func"))
+                     {
+                        if (t->cb.func)
+                          PARSE_ERROR("Func already specified");
+                        p->sm = SM_TRANSITION_CB_FUNC_PROP;
+                     }
+                   else if (!strcmp(buf, "data"))
+                     {
+                        if (t->cb.data)
+                          PARSE_ERROR("Data already specified");
+                        p->sm = SM_TRANSITION_CB_DATA_PROP;
+                     }
+                   else
+                     PARSE_ERROR("Invalid token [%s]", buf);
+                   break;
+
+                case SM_TRANSITION_CB_FUNC_PROP:
+                   t->cb.func = eina_stringshare_add_length(buf, k);
+                   p->sm = SM_TRANSITION_CB;
+                   break;
+
+                case SM_TRANSITION_CB_DATA_PROP:
+                   t->cb.data = eina_stringshare_add_length(buf, k);
+                   p->sm = SM_TRANSITION_CB;
                    break;
 
                 case SM_TRANSITION_START:

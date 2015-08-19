@@ -6,23 +6,13 @@ typedef struct
    FILE *f;
 } Fsm_Wrapper;
 
-static Eina_Bool
-_each_states_gi_cb(const Eina_Hash *hash   EINA_UNUSED,
-                   const void      *key    EINA_UNUSED,
-                   void            *data,
-                   void            *fdata)
+static void
+_gi_cb(FILE *f,
+       Eina_Stringshare **str,
+       unsigned int       str_count)
 {
-   Fsm_Wrapper *wrap = fdata;
-   State *s = data;
-   Eina_Stringshare *str[] = {
-      s->enterer.func,
-      s->exiter.func,
-      s->transition.func
-   };
-   FILE *f = wrap->f;
-   const int str_count = EINA_C_ARRAY_LENGTH(str);
    Eina_Stringshare *sh;
-   int i;
+   unsigned int i;
    int l, len;
 
    for (i = 0; i < str_count; ++i)
@@ -50,6 +40,35 @@ _each_states_gi_cb(const Eina_Hash *hash   EINA_UNUSED,
                      "\n");
           }
      }
+}
+
+static Eina_Bool
+_each_transitions_gi_cb(const Eina_Hash *hash   EINA_UNUSED,
+                        const void      *key    EINA_UNUSED,
+                        void            *data,
+                        void            *fdata)
+{
+   Fsm_Wrapper *wrap = fdata;
+   Transit *t = data;
+
+   _gi_cb(wrap->f, &(t->cb.func), 1);
+
+   return EINA_TRUE;
+}
+
+static Eina_Bool
+_each_states_gi_cb(const Eina_Hash *hash   EINA_UNUSED,
+                   const void      *key    EINA_UNUSED,
+                   void            *data,
+                   void            *fdata)
+{
+   Fsm_Wrapper *wrap = fdata;
+   State *s = data;
+   Eina_Stringshare *str[] = {
+      s->enterer.func,
+      s->exiter.func,
+   };
+   _gi_cb(wrap->f, str, EINA_C_ARRAY_LENGTH(str));
 
    return EINA_TRUE;
 }
@@ -167,6 +186,7 @@ estate_cc_out_gi(Eina_List  *parse,
                 fsm->name, fsm->name, fsm->name);
 
         eina_hash_foreach(fsm->states, _each_states_gi_cb, &wrap);
+        eina_hash_foreach(fsm->transitions, _each_transitions_gi_cb, &wrap);
      }
    fprintf(f, "#include \"%s\"\n\n", include);
 
