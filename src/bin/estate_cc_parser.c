@@ -10,19 +10,20 @@ enum
 
 typedef enum
 {
-   SM_NONE                      = 0,
-   SM_FSM                       = 1,
-   SM_TRANSITION_START          = 2,
-   SM_TRANSITION_FROM           = 3,
-   SM_TRANSITION_TO             = 4,
-   SM_STATE                     = 5,
-   SM_STATE_EOB                 = 6,
-   SM_STATE_CB                  = 7,
-   SM_STATE_CB_FUNC_PROP        = 8,
-   SM_STATE_CB_DATA_PROP        = 9,
-   SM_STATE_PROPERTY            = 10,
-   SM_STATES                    = 11,
-   SM_TRANSITIONS_MODEL         = 12
+   SM_NONE = 0,
+   SM_FSM,
+   SM_TRANSITIONS,
+   SM_TRANSITION_START,
+   SM_TRANSITION_FROM,
+   SM_TRANSITION_TO,
+   SM_STATE,
+   SM_STATE_EOB,
+   SM_STATE_CB,
+   SM_STATE_CB_FUNC_PROP,
+   SM_STATE_CB_DATA_PROP,
+   SM_STATE_PROPERTY,
+   SM_STATES,
+   SM_TRANSITIONS_MODEL
 } Sm;
 
 struct _Parser
