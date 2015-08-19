@@ -20,7 +20,9 @@ typedef enum
    SM_STATE_CB                  = 7,
    SM_STATE_CB_FUNC_PROP        = 8,
    SM_STATE_CB_DATA_PROP        = 9,
-   SM_STATE_PROPERTY            = 10
+   SM_STATE_PROPERTY            = 10,
+   SM_STATES                    = 11,
+   SM_TRANSITIONS_MODEL         = 12
 } Sm;
 
 struct _Parser
@@ -78,8 +80,10 @@ _sm_block_is(const Parser *p)
      {
       case SM_NONE:
       case SM_FSM:
+      case SM_TRANSITIONS_MODEL:
       case SM_TRANSITION_START:
       case SM_STATE:
+      case SM_STATES:
       case SM_STATE_CB:
       case SM_STATE_PROPERTY:
          return EINA_TRUE;
@@ -205,12 +209,12 @@ estate_cc_parser_parse(Parser *p)
               if (_sm_block_is(p))
                 p->has_token = EINA_TRUE;
               else
-                PARSE_ERROR("Invalid '{'");
+                PARSE_ERROR("Invalid '{'. Sm is %i", p->sm);
               break;
 
               /* Start of state property */
            case '@':
-              if (p->sm == SM_FSM)
+              if (p->sm == SM_STATES)
                 p->has_token = EINA_TRUE;
               else
                 PARSE_ERROR("Unexpected '@'. SM = %i", p->sm);
@@ -256,11 +260,19 @@ estate_cc_parser_parse(Parser *p)
                     break;
 
                  case SM_STATE:
+                    p->sm = SM_STATES;
+                    break;
+
+                 case SM_STATES:
+                    p->sm = SM_FSM;
+                    break;
+
+                 case SM_TRANSITIONS_MODEL:
                     p->sm = SM_FSM;
                     break;
 
                  case SM_TRANSITION_START:
-                    p->sm = SM_FSM;
+                    p->sm = SM_TRANSITIONS_MODEL;
                     break;
 
                  case SM_FSM:
@@ -312,23 +324,25 @@ estate_cc_parser_parse(Parser *p)
 
                 case SM_FSM:
                    if (!strcmp(buf, "transitions")) /* Block transitions */
-                     {
-                        p->sm = SM_TRANSITION_START;
-                     }
-                   else /* Definition of a state */
-                     {
-                        s = state_new(buf, k);
-                        if (eina_hash_find(f->states, s->name))
-                          PARSE_ERROR("State [%s] has already been defined", s->name);
-                        eina_hash_add(f->states, s->name, s);
+                     p->sm = SM_TRANSITIONS_MODEL;
+                   else if (!strcmp(buf, "states")) /* Block states */
+                     p->sm = SM_STATES;
+                   else
+                     PARSE_ERROR("Unexpected token [%s]. SM is %i", buf, p->sm);
+                   break;
 
-                        /* If there is a property, start parse it.
-                         * Otherwise, parse the state */
-                        if (c == '@')
-                          p->sm = SM_STATE_PROPERTY;
-                        else
-                          p->sm = SM_STATE;
-                     }
+                case SM_STATES:
+                   s = state_new(buf, k);
+                   if (eina_hash_find(f->states, s->name))
+                     PARSE_ERROR("State [%s] has already been defined", s->name);
+                   eina_hash_add(f->states, s->name, s);
+
+                   /* If there is a property, start parse it.
+                    * Otherwise, parse the state */
+                   if (c == '@')
+                     p->sm = SM_STATE_PROPERTY;
+                   else
+                     p->sm = SM_STATE;
                    break;
 
                 case SM_STATE:
@@ -384,6 +398,13 @@ estate_cc_parser_parse(Parser *p)
                 case SM_STATE_CB_DATA_PROP:
                    cb->data = eina_stringshare_add_length(buf, k);
                    p->sm = SM_STATE_CB;
+                   break;
+
+                case SM_TRANSITIONS_MODEL:
+                   if (!strcmp(buf, "model"))
+                     p->sm = SM_TRANSITION_START;
+                   else
+                     PARSE_ERROR("Unexpected token [%s]", buf);
                    break;
 
                 case SM_TRANSITION_START:

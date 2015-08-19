@@ -1,23 +1,23 @@
 tcp {
    transitions {
-      Tr0 : S1 -> S2;
-      Tr1 : S2 -> S3;
-      Tr2 : S3 -> S2;
-   }
-   S2{
-   }
-   S1 @init {
-      enterer {
-         func: func1;
-         data: data;
+      model {
+         Tr0 : S1 -> S2;
+         Tr1 : S2 -> S3;
+         Tr2 : S3 -> S2;
       }
-      exiter {
-         func: func2;
-         data: data;
+   }
+   states {
+      S2{
       }
-      transition {
-         func: func3;
-         data: data;
+      S1 @init {
+         enterer {
+            func: func1;
+            data: data;
+         }
+         exiter {
+            func: func2;
+            data: data;
+         }
       }
    }
 }
