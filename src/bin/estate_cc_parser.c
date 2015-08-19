@@ -325,6 +325,8 @@ estate_cc_parser_parse(Parser *p)
                 PARSE_ERROR("Invalid start of token");
               /* Register the character as being part of the next token */
               buf[k++] = c;
+              if (EINA_UNLIKELY(k >= sizeof(buf)))
+                PARSE_ERROR("Stack overflow: token too long");
               break;
 
            default:
