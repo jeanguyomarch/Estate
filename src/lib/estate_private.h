@@ -22,34 +22,26 @@ struct _Estate_Cb_Wrapper
 
 struct _Estate_Machine
 {
-   //Eina_Mempool         *mempool;
-
-   /* Arrays */
-   Eina_Array *states;
-   Eina_Array *transit;
-
+   Eina_Array           *states;
+   Eina_Array           *transit;
    Estate_State         *current_state;
    Eina_Hash            *data;
-   //Ecore_Event_Handler  *evt[3];
 };
 
 struct _Estate_State
 {
-   Eina_Stringshare       *name;
-   Estate_Cb_Wrapper cb[2];
-
-   Eina_Array *transit;
+   Eina_Stringshare     *name;
+   Estate_Cb_Wrapper     cb[2];
+   Eina_Array           *transit;
 };
 
 struct _Estate_Transition
 {
-   Eina_Stringshare *name;
-
-   Estate_State *from;
-   Estate_State *to;
-   Estate_Machine *mach;
-
-   Estate_Cb_Wrapper cb;
+   Eina_Stringshare     *name;
+   Estate_State         *from;
+   Estate_State         *to;
+   Estate_Machine       *mach;
+   Estate_Cb_Wrapper     cb;
 };
 
 Eina_Bool _estate_misc_cb_cache(Estate_Machine *mach, Estate_Cb_Wrapper *wrp);

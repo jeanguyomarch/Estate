@@ -113,15 +113,22 @@ _each_states_gc_fill_cb(const Eina_Hash *hash  EINA_UNUSED,
    fprintf(wrap->f,
            "   s_%s.name = eina_stringshare_add_length(\"%s\", sizeof(\"%s\") - 1);\n"
            "   s_%s.cb[ESTATE_CB_TYPE_ENTERER].func = %s;\n"
-           "   s_%s.cb[ESTATE_CB_TYPE_ENTERER].data = %s;\n"
+           "   s_%s.cb[ESTATE_CB_TYPE_ENTERER].data = NULL;\n"
            "   s_%s.cb[ESTATE_CB_TYPE_EXITER].func = %s;\n"
-           "   s_%s.cb[ESTATE_CB_TYPE_EXITER].data = %s;\n"
+           "   s_%s.cb[ESTATE_CB_TYPE_EXITER].data = NULL;\n"
+           "   s_%s.transit = eina_array_new(1);\n"
            "\n",
            s->name, s->name, s->name,
            s->name, s->enterer.func ?: "NULL",
-           s->name, s->enterer.data ?: "NULL",
+           s->name,
            s->name, s->exiter.func ?: "NULL",
-           s->name, s->exiter.data ?: "NULL");
+           s->name,
+           s->name);
+
+   fprintf(wrap->f,
+           "   eina_array_push(_fsm_%s.states, &s_%s);\n"
+           "\n",
+           wrap->fsm->name, s->name);
 
    return EINA_TRUE;
 }
@@ -139,10 +146,23 @@ _each_transitions_gc_gen_cb(const Eina_Hash *hash  EINA_UNUSED,
            "   t_%s.name = eina_stringshare_add_length(\"%s\", sizeof(\"%s\") - 1);\n"
            "   t_%s.from = &s_%s;\n"
            "   t_%s.to = &s_%s;\n"
+           "   t_%s.mach = &(_fsm_%s);\n"
+           "   t_%s.cb.func = %s;\n"
+           "   t_%s.cb.data = NULL;\n"
            "\n",
            t->name, t->name, t->name,
            t->name, t->from,
-           t->name, t->to);
+           t->name, t->to,
+           t->name, wrap->fsm->name,
+           t->name, t->cb.func ?: "NULL",
+           t->name);
+
+   fprintf(wrap->f,
+           "   eina_array_push(t_%s.from->transit, &t_%s);\n"
+           "   eina_array_push(_fsm_%s.transit, &t_%s);\n"
+           "\n",
+           t->name, t->name,
+           wrap->fsm->name, t->name);
 
    return EINA_TRUE;
 }
@@ -176,6 +196,8 @@ estate_cc_out_gi(Eina_List  *parse,
         fprintf(f,
                 "ESTATE_MACHINE_DECLARE(%s);\n"
                 "\n"
+                "Eina_Bool estate_fsm_%s_load(void);\n"
+                "\n"
                 "Eina_Bool\n"
                 "estate_fsm_%s_load(void)\n"
                 "{\n"
@@ -183,7 +205,10 @@ estate_cc_out_gi(Eina_List  *parse,
                 "   return ok;\n"
                 "}\n"
                 "\n",
-                fsm->name, fsm->name, fsm->name);
+                fsm->name,
+                fsm->name,
+                fsm->name,
+                fsm->name);
 
         eina_hash_foreach(fsm->states, _each_states_gi_cb, &wrap);
         eina_hash_foreach(fsm->transitions, _each_transitions_gi_cb, &wrap);
@@ -231,7 +256,14 @@ estate_cc_out_gc(Eina_List  *parse,
         fprintf(f,
                 "static Eina_Bool\n"
                 "_estate_fsm_%s_load(void)\n"
-                "{\n", fsm->name);
+                "{\n"
+                "   _fsm_%s.states = eina_array_new(%u);\n"
+                "   _fsm_%s.transit = eina_array_new(%u);\n"
+                "\n",
+                fsm->name,
+                fsm->name, eina_hash_population(fsm->states),
+                fsm->name, eina_hash_population(fsm->transitions));
+
 
         eina_hash_foreach(fsm->states, _each_states_gc_init_cb, &wrap);
         eina_hash_foreach(fsm->transitions, _each_transit_gc_init_cb, &wrap);
@@ -242,8 +274,12 @@ estate_cc_out_gc(Eina_List  *parse,
         eina_hash_foreach(fsm->transitions, _each_transitions_gc_gen_cb, &wrap);
 
         fprintf(f,
+                "   _fsm_%s.current_state = &s_%s\n"
+                "\n"
                 "   return EINA_TRUE;\n"
-                "}\n\n");
+                "}\n"
+                "\n",
+                fsm->name, fsm->init);
      }
 
    fflush(f);
