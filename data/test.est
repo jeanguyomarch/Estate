@@ -5,7 +5,7 @@ tcp {
          Tr1 : S2 -> S3;
          Tr2 : S3 -> S2;
       }
-      Tr5 {
+      Tr2 {
       }
    }
    states {

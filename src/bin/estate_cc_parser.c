@@ -188,12 +188,14 @@ estate_cc_parser_parse(Parser *p)
       goto fail; \
    } while (0)
 
+   /* Parse the file character by character, in one go */
    for (c = _char_next_get(p); c != EOF; c = _char_next_get(p))
      {
         /* Comments... skip */
         if (p->comments != COMMENT_NONE)
           continue;
 
+        /* Check for characters with a special meaning... */
         switch (c)
           {
              /* Check for comments */
@@ -235,7 +237,7 @@ estate_cc_parser_parse(Parser *p)
                 PARSE_ERROR("Invalid ':' current state is %i", p->sm);
               break;
 
-              /* End of propery */
+              /* End of property */
            case ';':
               if ((p->sm == SM_STATE_CB_FUNC_PROP) ||
                   (p->sm == SM_STATE_CB_DATA_PROP) ||
@@ -259,7 +261,7 @@ estate_cc_parser_parse(Parser *p)
                 PARSE_ERROR("Unexcepted character '%c'", c);
               break;
 
-              /* End of block */
+              /* End of block. case ENDING_BLOCK: p->sm = PARENT_BLOCK; */
            case '}':
               switch (p->sm)
                 {
@@ -305,19 +307,23 @@ estate_cc_parser_parse(Parser *p)
            case '\n':
            case '\r':
            case '\t':
+              /* Whitespace in the middle of a word must not be skipped! */
               if (k != 0)
                 p->stop_word = EINA_TRUE;
               break;
 
               /* Read a token - cannot start with a digit */
            case '0' ... '9':
+              /* Don't start with a digit (because C does it...) */
               if (k == 0)
                 PARSE_ERROR("Token cannot start with a digit");
            case '_':
            case 'a' ... 'z':
            case 'A' ... 'Z':
+              /* To enforce no whitespaces between words */
               if (p->stop_word)
                 PARSE_ERROR("Invalid start of token");
+              /* Register the character as being part of the next token */
               buf[k++] = c;
               break;
 
@@ -326,18 +332,27 @@ estate_cc_parser_parse(Parser *p)
           }
 
 
-        /* Parsing */
+        /* Parsing: a token was found during the previous passes */
         if (p->has_token)
           {
+             /* I want a NUL-terminates string */
              buf[k] = 0;
+
+             /* State machine: what to do with the token in function of what is
+              * the internal state of the parser */
              switch (p->sm)
                {
+                  /* Out of all blocks: create a new machine */
                 case SM_NONE:
                    f = fsm_new(buf, k);
-                   p->parse = eina_list_append(p->parse , f);
-                   p->sm = SM_FSM;
+                   p->parse = eina_list_append(p->parse, f);
+                   p->sm = SM_FSM; /* Start FSM */
                    break;
 
+                   /* In the FSM block I can describe:
+                    *   - transitions
+                    *   - states
+                    */
                 case SM_FSM:
                    if (!strcmp(buf, "transitions")) /* Block transitions */
                      p->sm = SM_TRANSITIONS;
@@ -347,6 +362,7 @@ estate_cc_parser_parse(Parser *p)
                      PARSE_ERROR("Unexpected token [%s]. SM is %i", buf, p->sm);
                    break;
 
+                   /* Just found a new state description... */
                 case SM_STATES:
                    s = state_new(buf, k);
                    if (eina_hash_find(f->states, s->name))
@@ -361,14 +377,18 @@ estate_cc_parser_parse(Parser *p)
                      p->sm = SM_STATE;
                    break;
 
+                   /* Internals of the state:
+                    *   - enterer
+                    *   - exiter
+                    */
                 case SM_STATE:
+                   /* cb will points on the callback handler to fill on next state */
                    if (!strcmp(buf, "enterer"))
                      cb = &(s->enterer);
                    else if (!strcmp(buf, "exiter"))
                      cb = &(s->exiter);
                    else
                      PARSE_ERROR("Invalid token [%s]", buf);
-
                    p->sm = SM_STATE_CB;
                    break;
 
@@ -387,6 +407,10 @@ estate_cc_parser_parse(Parser *p)
                      PARSE_ERROR("Invalid property [@%s]", buf);
                    break;
 
+                   /* Internals of a state callback:
+                    *   - func:
+                    *   - data:
+                    */
                 case SM_STATE_CB:
                    if (!strcmp(buf, "func"))
                      {
@@ -404,16 +428,19 @@ estate_cc_parser_parse(Parser *p)
                      PARSE_ERROR("Invalid token [%s]", buf);
                    break;
 
+                   /* Register what is in func: */
                 case SM_STATE_CB_FUNC_PROP:
                    cb->func = eina_stringshare_add_length(buf, k);
                    p->sm = SM_STATE_CB;
                    break;
 
+                   /* Register what is in data: */
                 case SM_STATE_CB_DATA_PROP:
                    cb->data = eina_stringshare_add_length(buf, k);
                    p->sm = SM_STATE_CB;
                    break;
 
+                   /* Parse the transitions block */
                 case SM_TRANSITIONS:
                    if (!strcmp(buf, "model"))
                      p->sm = SM_TRANSITION_START;
