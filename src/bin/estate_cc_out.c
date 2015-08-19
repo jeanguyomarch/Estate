@@ -274,7 +274,7 @@ estate_cc_out_gc(Eina_List  *parse,
         eina_hash_foreach(fsm->transitions, _each_transitions_gc_gen_cb, &wrap);
 
         fprintf(f,
-                "   _fsm_%s.current_state = &s_%s\n"
+                "   _fsm_%s.current_state = &s_%s;\n"
                 "\n"
                 "   return EINA_TRUE;\n"
                 "}\n"
