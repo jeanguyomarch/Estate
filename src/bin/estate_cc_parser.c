@@ -220,10 +220,7 @@ estate_cc_parser_parse(Parser *p)
               else if (c == '*')
                 p->comments = COMMENT_MULTIPLE_LINES;
               else
-                {
-                   PARSE_ERROR("Invalid character");
-                   goto fail;
-                }
+                PARSE_ERROR("Invalid character");
               break;
 
               /* Start of block */
