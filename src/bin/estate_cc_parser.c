@@ -245,6 +245,7 @@ estate_cc_parser_parse(Parser *p)
               /* End of property name */
            case ':':
               if ((p->sm == SM_STATE_CB) ||
+                  (p->sm == SM_TRANSITION_CB) ||
                   (p->sm == SM_TRANSITION_START))
                 p->has_token = EINA_TRUE;
               else
