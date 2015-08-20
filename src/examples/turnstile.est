@@ -1,0 +1,37 @@
+/*
+ * turnstile.est
+ *
+ * Example is from: https://en.wikipedia.org/wiki/Finite-state_machine
+ *
+ *
+ *                   +--------+   coin     +----------+
+ *            +------|        |----------->|          |<-----+
+ *       push |      | Locked |            | Unlocked |      | coin
+ *            +----->|        |<-----------|          |------+
+ *                   +--------+   push     +----------+
+ *                       ^
+ *                       |
+ *                      OOO
+ *                      OOO
+ *
+ */
+
+turnstile {
+   transitions {
+      model {
+         push_locked : Locked -> Locked;
+         push : Unlocked -> Locked;
+         coin : Locked -> Unlocked;
+         coin_unlocked : Unlocked -> Unlocked;
+      }
+      push_locked { cb { func: _push_locked; } }
+      push { cb { func: _push; } }
+      coin { cb { func: _coin; } }
+      coin_unlocked { cb { func: _coin_unlocked; } }
+   }
+
+   states {
+      Locked @init {}
+   }
+}
+

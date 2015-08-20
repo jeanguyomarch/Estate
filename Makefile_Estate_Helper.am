@@ -1,0 +1,4 @@
+AM_V_EST = $(am__v_EST_@AM_V@)
+am__v_EST_ = $(am__v_EST_@AM_DEFAULT_V@)
+am__v_EST_0 = @echo "  ESTATE  " $@;
+
