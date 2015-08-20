@@ -191,9 +191,23 @@ estate_cc_parser_parse(Parser *p)
    /* Parse the file character by character, in one go */
    for (c = _char_next_get(p); c != EOF; c = _char_next_get(p))
      {
-        /* Comments... skip */
-        if (p->comments != COMMENT_NONE)
-          continue;
+        /* Handle comments */
+        if (p->comments == COMMENT_SINGLE_LINE) /* Single line */
+          {
+             if (c == '\n')
+               p->comments = COMMENT_NONE;
+             continue;
+          }
+        else if (p->comments == COMMENT_MULTIPLE_LINES) /* Multi-lines */
+          {
+             if (c == '*')
+               {
+                  c = _char_next_get(p);
+                  if (c == '/')
+                    p->comments = COMMENT_NONE;
+               }
+             continue;
+          }
 
         /* Check for characters with a special meaning... */
         switch (c)
