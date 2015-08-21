@@ -7,11 +7,11 @@ AC_CONFIG_MACRO_DIR([m4])
 
 AC_CONFIG_HEADERS([config.h])
 AH_TOP([
-#ifndef __EMAIL_H__
-#define __EMAIL_H__
+#ifndef __ESTATE_H__
+#define __ESTATE_H__
 ])
 AH_BOTTOM([
-#endif /* ! __EMAIL_H__ */
+#endif /* ! __ESTATE_H__ */
 ])
 
 AM_INIT_AUTOMAKE([1.6 dist-xz -Wall color-tests foreign])
