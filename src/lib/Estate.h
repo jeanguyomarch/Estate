@@ -89,7 +89,7 @@ estate_transition_init(Estate_Transition  *tr,
                        const Estate_State *from,
                        const Estate_State *to,
                        Estate_Cb           func,
-                       void               *data);
+                       const char         *datakey);
 
 EAPI void estate_transition_deinit(Estate_Transition *tr);
 

@@ -20,18 +20,19 @@ estate_transition_init(Estate_Transition  *tr,
                        const Estate_State *from,
                        const Estate_State *to,
                        Estate_Cb           func,
-                       void               *data)
+                       const char         *datakey)
 {
    EINA_SAFETY_ON_NULL_RETURN_VAL(tr, EINA_FALSE);
    EINA_SAFETY_ON_NULL_RETURN_VAL(name, EINA_FALSE);
    EINA_SAFETY_ON_NULL_RETURN_VAL(from, EINA_FALSE);
    EINA_SAFETY_ON_NULL_RETURN_VAL(to, EINA_FALSE);
 
-   tr->name = name;
+   tr->name = eina_stringshare_add(name);
    tr->from = (Estate_State *)from;
    tr->to = (Estate_State *)to;
    tr->cb.func = func;
-   tr->cb.data = data;
+   tr->cb.data = NULL;
+   tr->cb.key = (datakey) ? eina_stringshare_add(datakey) : NULL;
 
    return EINA_TRUE;
 }

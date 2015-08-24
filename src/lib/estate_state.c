@@ -46,18 +46,18 @@ estate_state_init(Estate_State             *st,
      eina_array_push(st->transit, transitions[i]);
 
    /* Set enterer */
-   st->cb[ESTATE_CB_TYPE_ENTERER].func = enterer;
-   st->cb[ESTATE_CB_TYPE_ENTERER].data = NULL;
-   if (enterer_datakey)
-     st->cb[ESTATE_CB_TYPE_ENTERER].key = eina_stringshare_add(enterer_datakey);
+   st->cb[0].func = enterer;
+   st->cb[0].data = NULL;
+   st->cb[0].key = (enterer_datakey != NULL) ?
+      eina_stringshare_add(enterer_datakey) : NULL;
 
    /* Set exiter */
-   st->cb[ESTATE_CB_TYPE_EXITER].func = exiter;
-   st->cb[ESTATE_CB_TYPE_EXITER].data = NULL;
-   if (enterer_datakey)
-     st->cb[ESTATE_CB_TYPE_EXITER].key = eina_stringshare_add(exiter_datakey);
+   st->cb[1].func = exiter;
+   st->cb[1].data = NULL;
+   st->cb[1].key = (exiter_datakey != NULL) ?
+      eina_stringshare_add(exiter_datakey) : NULL;
 
-   st->name = name;
+   st->name = eina_stringshare_add(name);
 
    return EINA_TRUE;
 
