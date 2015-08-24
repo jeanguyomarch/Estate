@@ -177,6 +177,12 @@ estate_machine_transition_do(Estate_Machine *mach,
    unsigned int i;
    Eina_Bool found = EINA_FALSE;
 
+   if (EINA_UNLIKELY(!mach->locked))
+     {
+        ERR("Attempt to do a transition, but the state machine not locked");
+        return EINA_FALSE;
+     }
+
    /* For immediate search */
    shr = eina_stringshare_add(transition);
 
