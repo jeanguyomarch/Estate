@@ -14,6 +14,7 @@ estate_state_new(Estate_Machine *mach EINA_UNUSED)
 EAPI void
 estate_state_free(Estate_State *st)
 {
+   estate_state_deinit(st);
    /* XXX Update when mach allocator will be used */
    free(st);
 }
@@ -71,6 +72,9 @@ estate_state_deinit(Estate_State *st)
 {
    if (!st) return;
    if (st->transit) eina_array_free(st->transit);
+   if (st->name) eina_stringshare_del(st->name);
+   if (st->cb[0].key) eina_stringshare_del(st->cb[0].key);
+   if (st->cb[1].key) eina_stringshare_del(st->cb[1].key);
 }
 
 EAPI const char *

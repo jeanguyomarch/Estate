@@ -10,6 +10,7 @@ estate_transition_new(Estate_Machine *mach EINA_UNUSED)
 EAPI void
 estate_transition_free(Estate_Transition *tr)
 {
+   estate_transition_deinit(tr);
    /* XXX Update when mach allocator will be used */
    free(tr);
 }
@@ -38,9 +39,10 @@ estate_transition_init(Estate_Transition  *tr,
 }
 
 EAPI void
-estate_transition_deinit(Estate_Transition *tr EINA_UNUSED)
+estate_transition_deinit(Estate_Transition *tr)
 {
-   /* Nothing to do... */
+   if (tr->name) eina_stringshare_del(tr->name);
+   if (tr->cb.key) eina_stringshare_del(tr->cb.key);
 }
 
 EAPI const char *

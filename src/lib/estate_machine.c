@@ -62,8 +62,20 @@ estate_machine_free(Estate_Machine *mach)
 {
    if (!mach) return;
    if (mach->data) eina_hash_free(mach->data);
-   if (mach->states) eina_array_free(mach->states);
-   if (mach->transit) eina_array_free(mach->transit);
+   if (mach->states)
+     {
+        Estate_State *st;
+        while ((st = eina_array_pop(mach->states)) != NULL)
+          estate_state_free(st);
+        eina_array_free(mach->states);
+     }
+   if (mach->transit)
+     {
+        Estate_Transition *tr;
+        while ((tr = eina_array_pop(mach->transit)) != NULL)
+          estate_transition_free(tr);
+        eina_array_free(mach->transit);
+     }
    free(mach);
 }
 
