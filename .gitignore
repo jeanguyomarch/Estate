@@ -47,3 +47,6 @@ Makefile.in
 /src/bin/estate_cc
 /src/examples/turnstile
 
+/doc/html
+/doc/Doxyfile
+
