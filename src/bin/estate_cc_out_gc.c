@@ -119,12 +119,13 @@ _each_transitions_gc_init_cb(const Eina_Hash *hash  EINA_UNUSED,
    Transit *t = data;
 
    fprintf(wrap->f,
-           "   chk = estate_transition_init(t_%s, \"%s\", s_%s, s_%s, %s, NULL);\n"
+           "   chk = estate_transition_init(t_%s, \"%s\", s_%s, s_%s, %s, %s);\n"
            "   if (EINA_UNLIKELY(!chk)) goto fsm_fail;\n"
            "   chk = estate_machine_transition_add(fsm, t_%s);\n"
            "   if (EINA_UNLIKELY(!chk)) goto fsm_fail;\n"
            "\n",
-           t->name, t->name, t->from, t->to, t->cb.func ?: "NULL", t->name);
+           t->name, t->name, t->from, t->to,
+           t->cb.func ?: "NULL", t->cb.data ?: "NULL", t->name);
 
    return EINA_TRUE;
 }
