@@ -1,6 +1,6 @@
 ACLOCAL_AMFLAGS = -I m4
 
-SUBDIRS = src
+SUBDIRS = src doc
 
 MAINTAINERCLEANFILES =	\
 Makefile.in		\
@@ -28,4 +28,9 @@ m4/efl_compiler_flag.m4		\
 m4/efl_doxygen.m4		\
 README.md			\
 AUTHORS
+
+.PHONY: doc
+
+doc:
+	$(MAKE) $(AM_MAKEFLAGS) -C doc doc
 
