@@ -31,7 +31,22 @@ turnstile {
    }
 
    states {
-      Locked @init {}
+      Locked @init {
+         enterer {
+            func: _locked_in;
+         }
+         exiter {
+            func: _locked_out;
+         }
+      }
+      Unlocked {
+         enterer {
+            func: _unlocked_in;
+         }
+         exiter {
+            func: _unlocked_out;
+         }
+      }
    }
 }
 
