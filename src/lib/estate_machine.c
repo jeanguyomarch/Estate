@@ -48,6 +48,7 @@ estate_machine_new(unsigned int states,
 
    /* No current state */
    mach->current_state = NULL;
+   mach->locked = EINA_FALSE;
 
    return mach;
 
@@ -73,6 +74,12 @@ estate_machine_state_add(Estate_Machine     *mach,
    EINA_SAFETY_ON_NULL_RETURN_VAL(mach, EINA_FALSE);
    EINA_SAFETY_ON_NULL_RETURN_VAL(state, EINA_FALSE);
 
+   if (EINA_UNLIKELY(mach->locked))
+     {
+        ERR("Attempt to add a new state but the state machine is locked");
+        return EINA_FALSE;
+     }
+
    eina_array_push(mach->states, state);
    return EINA_TRUE;
 }
@@ -84,6 +91,11 @@ estate_machine_transition_add(Estate_Machine          *mach,
    EINA_SAFETY_ON_NULL_RETURN_VAL(mach, EINA_FALSE);
    EINA_SAFETY_ON_NULL_RETURN_VAL(tr, EINA_FALSE);
 
+   if (EINA_UNLIKELY(mach->locked))
+     {
+        ERR("Attempt to add a new transition but the state machine is locked");
+        return EINA_FALSE;
+     }
 
    eina_array_push(mach->transit, tr);
    return EINA_TRUE;
@@ -94,6 +106,12 @@ EAPI Estate_State *
 estate_machine_current_state_get(const Estate_Machine *mach)
 {
    EINA_SAFETY_ON_NULL_RETURN_VAL(mach, NULL);
+   if (EINA_UNLIKELY(!mach->locked))
+     {
+        ERR("Attempt to get current state of a state machine, but it is not"
+            " locked");
+        return NULL;
+     }
    return mach->current_state;
 }
 
@@ -107,6 +125,12 @@ estate_machine_data_set(Estate_Machine *mach,
    EINA_SAFETY_ON_NULL_RETURN_VAL(value, EINA_FALSE);
 
    Eina_Stringshare *shr;
+
+   if (EINA_UNLIKELY(!mach->locked))
+     {
+        ERR("Attempt to set data of a state machine, but it is not locked");
+        return EINA_FALSE;
+     }
 
    shr = eina_stringshare_add(key);
    if (eina_hash_find(mach->data, shr) != NULL)
@@ -203,13 +227,23 @@ estate_machine_transition_do(Estate_Machine *mach,
                              const char     *name)
 {
    EINA_SAFETY_ON_NULL_RETURN_VAL(mach, EINA_FALSE);
+   EINA_SAFETY_ON_NULL_RETURN_VAL(name, EINA_FALSE);
+   if (EINA_UNLIKELY(!mach->locked))
+     {
+        ERR("Attempt to do a transition but the state machine is not locked");
+        return EINA_FALSE;
+     }
    return _estate_state_transition_do(mach->current_state, name);
 }
 
 EAPI void
-estate_machine_lock(Estate_Machine *mach)
+estate_machine_lock(Estate_Machine     *mach,
+                    const Estate_State *current)
 {
    EINA_SAFETY_ON_NULL_RETURN(mach);
+   EINA_SAFETY_ON_NULL_RETURN(current);
+
+   mach->current_state = (Estate_State *)current;
    mach->locked = EINA_TRUE;
 }
 
