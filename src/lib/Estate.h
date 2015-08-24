@@ -89,6 +89,8 @@ estate_transition_init(Estate_Transition  *tr,
 
 EAPI void estate_transition_deinit(Estate_Transition *tr);
 
+EAPI const char *estate_transition_name_get(const Estate_Transition *st);
+
 /**
  * @}
  */

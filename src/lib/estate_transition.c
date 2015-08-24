@@ -109,3 +109,10 @@ fail:
    return EINA_FALSE;
 }
 
+EAPI const char *
+estate_transition_name_get(const Estate_Transition *st)
+{
+   EINA_SAFETY_ON_NULL_RETURN_VAL(st, NULL);
+   return st->name;
+}
+
