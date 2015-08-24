@@ -94,13 +94,17 @@ _each_states_gc_init_cb(const Eina_Hash *hash  EINA_UNUSED,
    fprintf(wrap->f,
            "           NULL\n"
            "        };\n"
-           "        chk = estate_state_init(s_%s, \"%s\", trs, EINA_C_ARRAY_LENGTH(trs) - 1);\n"
+           "        chk = estate_state_init(s_%s, \"%s\", trs, EINA_C_ARRAY_LENGTH(trs) - 1,\n"
+           "                                %s, %s, %s, %s);\n"
            "        if (EINA_UNLIKELY(!chk)) goto fsm_fail;\n"
            "        chk = estate_machine_state_add(fsm, s_%s);\n"
            "        if (EINA_UNLIKELY(!chk)) goto fsm_fail;\n"
            "     }\n"
            "\n",
-           s->name, s->name, s->name);
+           s->name, s->name,
+           s->enterer.func ?: "NULL", s->enterer.data ?: "NULL",
+           s->exiter.func ?: "NULL", s->exiter.data ?: "NULL",
+           s->name);
 
    return EINA_TRUE;
 }
