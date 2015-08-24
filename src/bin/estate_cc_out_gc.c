@@ -77,6 +77,21 @@ _each_transitions_gc_print_from_cb(const Eina_Hash *hash   EINA_UNUSED,
    return EINA_TRUE;
 }
 
+static const char *
+_stringize_data(const char *str)
+{
+   static char buf[1024];
+   int len = 0;
+
+   buf[0] = 0; /* Always reset */
+   if (str)
+     len = snprintf(buf, sizeof(buf), "\"%s\"", str);
+   else
+     len = snprintf(buf, sizeof(buf), "NULL");
+
+   return buf;
+}
+
 static Eina_Bool
 _each_states_gc_init_cb(const Eina_Hash *hash  EINA_UNUSED,
                         const void      *key   EINA_UNUSED,
@@ -102,8 +117,8 @@ _each_states_gc_init_cb(const Eina_Hash *hash  EINA_UNUSED,
            "     }\n"
            "\n",
            s->name, s->name,
-           s->enterer.func ?: "NULL", s->enterer.data ?: "NULL",
-           s->exiter.func ?: "NULL", s->exiter.data ?: "NULL",
+           s->enterer.func ?: "NULL", _stringize_data(s->enterer.data),
+           s->exiter.func ?: "NULL", _stringize_data(s->exiter.data),
            s->name);
 
    return EINA_TRUE;
@@ -125,7 +140,7 @@ _each_transitions_gc_init_cb(const Eina_Hash *hash  EINA_UNUSED,
            "   if (EINA_UNLIKELY(!chk)) goto fsm_fail;\n"
            "\n",
            t->name, t->name, t->from, t->to,
-           t->cb.func ?: "NULL", t->cb.data ?: "NULL", t->name);
+           t->cb.func ?: "NULL", _stringize_data(t->cb.data), t->name);
 
    return EINA_TRUE;
 }
