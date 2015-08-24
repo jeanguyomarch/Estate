@@ -79,8 +79,11 @@ main(void)
 {
    Estate_Machine *fsm;
 
+   estate_init();
    fsm = estate_fsm_turnstile_load();
    estate_machine_transition_do(fsm, "push");
+
+   estate_shutdown();
    return 0;
 }
 
