@@ -80,8 +80,16 @@ main(void)
    Estate_Machine *fsm;
 
    estate_init();
+
    fsm = estate_fsm_turnstile_load();
+   estate_machine_transition_do(fsm, "push_locked");
+   estate_machine_transition_do(fsm, "coin");
+   estate_machine_transition_do(fsm, "coin_unlocked");
+   estate_machine_transition_do(fsm, "coin_unlocked");
    estate_machine_transition_do(fsm, "push");
+   estate_machine_transition_do(fsm, "push"); /* Fails (expected) */
+
+   estate_machine_free(fsm);
 
    estate_shutdown();
    return 0;

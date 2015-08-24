@@ -4,15 +4,15 @@
  * Example is from: https://en.wikipedia.org/wiki/Finite-state_machine
  *
  *
- *                   +--------+   coin     +----------+
- *            +------|        |----------->|          |<-----+
- *       push |      | Locked |            | Unlocked |      | coin
- *            +----->|        |<-----------|          |------+
- *                   +--------+   push     +----------+
- *                       ^
- *                       |
- *                      OOO
- *                      OOO
+ *                    +--------+   coin     +----------+
+ *             +------|        |----------->|          |<-----+
+ * push_locked |      | Locked |            | Unlocked |      | coin_unlocked
+ *             +----->|        |<-----------|          |------+
+ *                    +--------+   push     +----------+
+ *                        ^
+ *                        |
+ *                       OOO
+ *                       OOO
  *
  */
 
