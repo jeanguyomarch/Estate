@@ -130,6 +130,10 @@ EAPI Estate_State *estate_machine_current_state_get(const Estate_Machine *mach);
 
 EAPI void estate_machine_lock(Estate_Machine *mach, const Estate_State *current);
 
+EAPI Eina_Bool
+estate_machine_transition_do(Estate_Machine *mach,
+                             const char     *transition);
+
 /**
  * @}
  */
