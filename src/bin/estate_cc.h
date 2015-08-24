@@ -8,6 +8,7 @@ typedef struct _Fsm Fsm;
 typedef struct _Transit Transit;
 typedef struct _State State;
 typedef struct _Cb Cb;
+typedef struct _Fsm_Wrapper Fsm_Wrapper;
 
 typedef enum
 {
@@ -50,6 +51,12 @@ struct _Fsm
    Eina_Stringshare *init;
 };
 
+struct _Fsm_Wrapper
+{
+   Fsm   *fsm;
+   FILE  *f;
+   State *cstate;
+};
 
 extern int _estate_cc_dom;
 unsigned int estate_cc_verbosity_get(void);
