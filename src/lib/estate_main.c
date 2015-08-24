@@ -19,7 +19,7 @@ estate_init(void)
              EINA_LOG_CRIT("Failed to init Eina");
              return --_init_count;
           }
-        _estate_log_dom = eina_log_domain_register("Estate", EINA_COLOR_WHITE);
+        _estate_log_dom = eina_log_domain_register("estate", EINA_COLOR_WHITE);
         if (EINA_UNLIKELY(_estate_log_dom < 0))
           {
              EINA_LOG_CRIT("Failed to create log domain");
