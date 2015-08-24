@@ -273,6 +273,13 @@ estate_cc_parser_parse(Parser *p)
                 PARSE_ERROR("Unexcepted character '%c'", c);
               break;
 
+              /* Transition (from) > (to) */
+           case '>':
+              if (p->sm != SM_TRANSITION_FROM)
+                PARSE_ERROR("Unexcepted character '>'");
+              p->has_token = EINA_TRUE;
+              break;
+
               /* End of block. case ENDING_BLOCK: p->sm = PARENT_BLOCK; */
            case '}':
               switch (p->sm)
