@@ -11,7 +11,15 @@ extern int ESTATE_EVENT_EXITER;
 extern int ESTATE_EVENT_TRANSITION;
 #endif
 
+typedef struct _Estate_Mempool Estate_Mempool;
 typedef struct _Estate_Cb_Wrapper Estate_Cb_Wrapper;
+
+struct _Estate_Mempool
+{
+   void          *base;
+   unsigned char *ptr;
+   size_t         mem;
+};
 
 struct _Estate_Cb_Wrapper
 {
@@ -22,10 +30,14 @@ struct _Estate_Cb_Wrapper
 
 struct _Estate_Machine
 {
+   Estate_Mempool       *mempool;
+
    Eina_Array           *states;
    Eina_Array           *transit;
    Estate_State         *current_state;
    Eina_Hash            *data;
+
+   Eina_Bool             locked;
 };
 
 struct _Estate_State

@@ -4,6 +4,21 @@
  *                                 Public API                                 *
  *============================================================================*/
 
+EAPI Estate_State *
+estate_state_new(Estate_Machine *mach EINA_UNUSED)
+{
+   /* XXX Use mach allocator */
+   return calloc(1, sizeof(Estate_State));
+}
+
+EAPI void
+estate_state_free(Estate_State *st)
+{
+   /* XXX Update when mach allocator will be used */
+   free(st);
+}
+
+
 EAPI Eina_Bool
 estate_state_init(Estate_State             *st,
                   const char               *name,

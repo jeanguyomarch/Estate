@@ -12,7 +12,7 @@ estate_machine_new(unsigned int states,
    mem = (states * sizeof(Estate_State)) +
       (transitions * sizeof(Estate_Transition)) +
       sizeof(Estate_Machine);
-   mempool = eina_mempool_add("one_big", "Estate_Machine", NULL, mem);
+   mempool = _estate_mempool_new(mem, EINA_FALSE);
 #endif
 
    mach = malloc(sizeof(*mach));
@@ -204,5 +204,12 @@ estate_machine_transition_do(Estate_Machine *mach,
 {
    EINA_SAFETY_ON_NULL_RETURN_VAL(mach, EINA_FALSE);
    return _estate_state_transition_do(mach->current_state, name);
+}
+
+EAPI void
+estate_machine_lock(Estate_Machine *mach)
+{
+   EINA_SAFETY_ON_NULL_RETURN(mach);
+   mach->locked = EINA_TRUE;
 }
 

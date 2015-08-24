@@ -1,5 +1,19 @@
 #include "estate_private.h"
 
+EAPI Estate_Transition *
+estate_transition_new(Estate_Machine *mach EINA_UNUSED)
+{
+   /* XXX Use mach allocator */
+   return calloc(1, sizeof(Estate_Transition));
+}
+
+EAPI void
+estate_transition_free(Estate_Transition *tr)
+{
+   /* XXX Update when mach allocator will be used */
+   free(tr);
+}
+
 EAPI Eina_Bool
 estate_transition_init(Estate_Transition  *tr,
                        const char         *name,
