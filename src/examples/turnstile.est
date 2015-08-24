@@ -19,9 +19,9 @@
 turnstile {
    transitions {
       model {
-         push_locked : Locked -> Locked;
-         push : Unlocked -> Locked;
-         coin : Locked -> Unlocked;
+         push_locked : Locked > Locked;
+         push : Unlocked > Locked;
+         coin : Locked > Unlocked;
          coin_unlocked : Unlocked -> Unlocked;
       }
       push_locked { cb { func: _push_locked; } }
