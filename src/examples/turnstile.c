@@ -67,21 +67,28 @@ _unlocked_in(void                    *data       EINA_UNUSED,
 }
 
 static void
-_unlocked_out(void                    *data       EINA_UNUSED,
+_unlocked_out(void                    *data,
               Estate_Cb_Type           type       EINA_UNUSED,
               const Estate_Transition *transition EINA_UNUSED)
 {
-   printf("STATE <EXITER> I am not unlocked anymore\n");
+   int *mydata = data;
+   printf("STATE <EXITER> I am not unlocked anymore, and my data is <%i>\n",
+          *mydata);
 }
 
 int
 main(void)
 {
    Estate_Machine *fsm;
+   static int mydata = 777;
 
    estate_init();
 
+
    fsm = estate_fsm_turnstile_load();
+
+   estate_machine_data_set(fsm, "exiter_datakey", &mydata);
+
    estate_machine_transition_do(fsm, "push_locked");
    estate_machine_transition_do(fsm, "coin");
    estate_machine_transition_do(fsm, "coin_unlocked");

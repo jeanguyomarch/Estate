@@ -45,6 +45,7 @@ turnstile {
          }
          exiter {
             func: _unlocked_out;
+            data: exiter_datakey;
          }
       }
    }
