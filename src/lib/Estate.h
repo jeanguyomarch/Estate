@@ -59,7 +59,11 @@ EAPI Eina_Bool
 estate_state_init(Estate_State             *st,
                   const char               *name,
                   const Estate_Transition **transitions,
-                  unsigned int              transit_count);
+                  unsigned int              transit_count,
+                  Estate_Cb                 enterer,
+                  const char               *enterer_datakey,
+                  Estate_Cb                 exiter,
+                  const char               *exiter_datakey);
 
 EAPI void estate_state_deinit(Estate_State *st);
 

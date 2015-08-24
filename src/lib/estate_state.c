@@ -23,7 +23,11 @@ EAPI Eina_Bool
 estate_state_init(Estate_State             *st,
                   const char               *name,
                   const Estate_Transition **transitions,
-                  unsigned int              transit_count)
+                  unsigned int              transit_count,
+                  Estate_Cb                 enterer,
+                  const char               *enterer_datakey,
+                  Estate_Cb                 exiter,
+                  const char               *exiter_datakey)
 {
    EINA_SAFETY_ON_NULL_RETURN_VAL(st, EINA_FALSE);
    EINA_SAFETY_ON_NULL_RETURN_VAL(name, EINA_FALSE);
@@ -40,6 +44,18 @@ estate_state_init(Estate_State             *st,
 
    for (i = 0; i < transit_count; ++i)
      eina_array_push(st->transit, transitions[i]);
+
+   /* Set enterer */
+   st->cb[ESTATE_CB_TYPE_ENTERER].func = enterer;
+   st->cb[ESTATE_CB_TYPE_ENTERER].data = NULL;
+   if (enterer_datakey)
+     st->cb[ESTATE_CB_TYPE_ENTERER].key = eina_stringshare_add(enterer_datakey);
+
+   /* Set exiter */
+   st->cb[ESTATE_CB_TYPE_EXITER].func = exiter;
+   st->cb[ESTATE_CB_TYPE_EXITER].data = NULL;
+   if (enterer_datakey)
+     st->cb[ESTATE_CB_TYPE_EXITER].key = eina_stringshare_add(exiter_datakey);
 
    st->name = name;
 
