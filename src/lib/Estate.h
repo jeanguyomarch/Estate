@@ -5,6 +5,39 @@
  *
  * Estate is a library to create and manipulate finite
  * state machines (FSM).
+ *
+ * @mainpage Estate
+ * @date 2015 (created)
+ *
+ * @section toc Table of Contents
+ *
+ * @li @ref estate_intro
+ * @li @ref estate_compiling
+ * @li @ref estate_syntax
+ * @li @ref estate_compiler
+ * @li @ref estate_api
+ *
+ * @section estate_intro Introduction
+ *
+ * Estate is both a C library and a descriptive language to create and
+ * manipulate finite state machines (FSM).
+ *
+ * @section estate_compiling How to compile
+ * @todo
+ *
+ * @section estate_syntax Estate Descriptive Syntax
+ * @todo
+ *
+ * @section estate_compiler The Estate Compiler
+ * @todo
+ *
+ * @section estate_api The Estate Application Programming Interface (API)
+ *
+ * The API is split into several modules:
+ * @li @ref Estate_Main
+ * @li @ref Estate_Machine
+ * @li @ref Estate_State
+ * @li @ref Estate_Transition
  */
 
 #ifndef _ESTATE_H_
