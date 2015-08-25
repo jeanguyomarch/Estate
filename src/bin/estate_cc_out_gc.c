@@ -77,19 +77,15 @@ _each_transitions_gc_print_from_cb(const Eina_Hash *hash   EINA_UNUSED,
    return EINA_TRUE;
 }
 
-static const char *
-_stringize_data(const char *str)
+static void
+_stringize_data(const char   *str,
+                char         *buf,
+                unsigned int  len)
 {
-   static char buf[1024];
-   int len = 0;
-
-   buf[0] = 0; /* Always reset */
    if (str)
-     len = snprintf(buf, sizeof(buf), "\"%s\"", str);
+     snprintf(buf, len, "\"%s\"", str);
    else
-     len = snprintf(buf, sizeof(buf), "NULL");
-
-   return buf;
+     snprintf(buf, len, "NULL");
 }
 
 static Eina_Bool
@@ -100,6 +96,10 @@ _each_states_gc_init_cb(const Eina_Hash *hash  EINA_UNUSED,
 {
    Fsm_Wrapper *wrap = fdata;
    State *s = data;
+   char b1[128], b2[128];
+
+   _stringize_data(s->enterer.data, b1, sizeof(b1));
+   _stringize_data(s->exiter.data, b2, sizeof(b2));
 
    fprintf(wrap->f,
            "     {\n"
@@ -117,8 +117,8 @@ _each_states_gc_init_cb(const Eina_Hash *hash  EINA_UNUSED,
            "     }\n"
            "\n",
            s->name, s->name,
-           s->enterer.func ?: "NULL", _stringize_data(s->enterer.data),
-           s->exiter.func ?: "NULL", _stringize_data(s->exiter.data),
+           s->enterer.func ?: "NULL", b1,
+           s->exiter.func ?: "NULL", b2,
            s->name);
 
    return EINA_TRUE;
@@ -132,7 +132,9 @@ _each_transitions_gc_init_cb(const Eina_Hash *hash  EINA_UNUSED,
 {
    Fsm_Wrapper *wrap = fdata;
    Transit *t = data;
+   char b[128];
 
+   _stringize_data(t->cb.data, b, sizeof(b));
    fprintf(wrap->f,
            "   chk = estate_transition_init(t_%s, \"%s\", s_%s, s_%s, %s, %s);\n"
            "   if (EINA_UNLIKELY(!chk)) goto fsm_fail;\n"
@@ -140,7 +142,7 @@ _each_transitions_gc_init_cb(const Eina_Hash *hash  EINA_UNUSED,
            "   if (EINA_UNLIKELY(!chk)) goto fsm_fail;\n"
            "\n",
            t->name, t->name, t->from, t->to,
-           t->cb.func ?: "NULL", _stringize_data(t->cb.data), t->name);
+           t->cb.func ?: "NULL", b, t->name);
 
    return EINA_TRUE;
 }
