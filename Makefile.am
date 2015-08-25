@@ -29,6 +29,9 @@ m4/efl_doxygen.m4		\
 README.md			\
 AUTHORS
 
+pkgconfigdir = $(libdir)/pkgconfig
+pkgconfig_DATA = pc/estate.pc
+
 .PHONY: doc
 
 doc:

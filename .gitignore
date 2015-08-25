@@ -41,6 +41,7 @@ Makefile.in
 *.log
 *.trs
 *.est.c
+*.pc
 
 /src/tests/estate_suite.xml
 /src/tests/estate_suite

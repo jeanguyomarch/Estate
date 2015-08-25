@@ -65,6 +65,7 @@ EFL_COMPILER_FLAG([-Winit-self])
 
 AC_CONFIG_FILES([
    Makefile
+   pc/estate.pc
    doc/Makefile
    doc/Doxyfile
    src/Makefile
