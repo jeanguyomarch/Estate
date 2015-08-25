@@ -38,6 +38,9 @@
  * @li @ref Estate_Machine
  * @li @ref Estate_State
  * @li @ref Estate_Transition
+ *
+ * Estate developers can access the internal API documentation:
+ * @li @ref Estate_Private
  */
 
 #ifndef _ESTATE_H_
@@ -45,31 +48,60 @@
 
 #include <Eina.h>
 
-
 /**
  * @defgroup Estate_Main Top level functions
  * API that affect Estate as a whole
- * @{
  */
 
 /**
+ * @defgroup Estate_State State API
+ * API to manipulate States in an FSM
+ */
+
+/**
+ * @defgroup Estate_Transition Transition API
+ * API to manipulate Transitions in an FSM
+ */
+
+/**
+ * @defgroup Estate_Machine Finite State Machine API
+ * API to manipulate finite state machines objects
+ */
+
+
+
+
+/**
+ * @addtogroup Estate_Machine
+ * @{
  * @typedef Estate_Machine
  * An opaque handler for a finite state machine
  */
 typedef struct _Estate_Machine Estate_Machine;
+/** @} */
 
 /**
+ * @addtogroup Estate_State
+ * @{
  * @typedef Estate_State
  * An opaque handler for a state
  */
 typedef struct _Estate_State Estate_State;
+/** @} */
 
 /**
+ * @addtogroup Estate_Transition
+ * @{
  * @typedef Estate_Transition
  * An opaque handler for a transition
  */
 typedef struct _Estate_Transition Estate_Transition;
+/** @} */
 
+/**
+ * @addtogroup Estate_Main
+ * @{
+ */
 
 /**
  * @enum Estate_Cb_Type
@@ -114,8 +146,7 @@ EAPI int estate_shutdown(void);
 
 
 /**
- * @defgroup Estate_State State API
- * API to manipulate States in an FSM
+ * @addtogroup Estate_State
  * @{
  */
 
@@ -181,8 +212,7 @@ EAPI const char *estate_state_name_get(const Estate_State *st);
 
 
 /**
- * @defgroup Estate_Transition Transition API
- * API to manipulate Transitions in an FSM
+ * @addtogroup Estate_Transition
  * @{
  */
 
@@ -242,8 +272,7 @@ EAPI const char *estate_transition_name_get(const Estate_Transition *tr);
 
 
 /**
- * @defgroup Estate_Machine Finite State Machine API
- * API to manipulate finite state machines objects
+ * @addtogroup Estate_Machine
  * @{
  */
 
