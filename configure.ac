@@ -29,7 +29,7 @@ PKG_PROG_PKG_CONFIG
 
 EFL_CHECK_DOXYGEN([build_doc="yes"], [build_doc="no"])
 
-efl_lib_version="1.14.99"
+efl_lib_version="1.7"
 PKG_CHECK_MODULES([EFL], [
    eina       >= ${efl_lib_version}
 ])
