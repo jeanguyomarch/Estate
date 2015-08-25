@@ -6,7 +6,7 @@ TESTS = estate_suite
 estate_suite_SOURCES = \
 estate_suite.c \
 estate_suite.h \
-estate_main.c
+estate_lib.c
 
 estate_suite_CPPFLAGS = \
 -I$(top_srcdir)/src/lib \
