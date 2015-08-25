@@ -22,14 +22,55 @@
  * Estate is both a C library and a descriptive language to create and
  * manipulate finite state machines (FSM).
  *
- * @section estate_compiling How to compile
- * @todo
+ * A FSM can be described by its transitions only, a transition
+ * being a unidirectional relation from a state to another.
+ * However, this is of no use if one cannot attach event handlers
+ * to trigger events when a state changes (a transition occurs).
+ *
+ * Estate allows you to attach a callback to each transition, which will
+ * be called when the transition will be activated.
+ * Furthermore, each state can register two callbacks:
+ * @li the enterer callback: called when a transition points to the state
+ * @li the exiter callback: called when a transition leaves the state
+ *
+ * Furthermore, you can provide a user data to each callback. User data
+ * must be uniquely identified by a key (a string), so the program
+ * can provide it later.
+ *
+ *
+ * This is how you should use Esate:
+ * @li describe your finite state machine in an Estate (.est) file
+ * @li generate a C boilerplate with `estate_cc`: `estate_cc --gi file.est.c -o file.c file.est`
+ * @li generate the C implementation of your FSM, which uses the Estate library,
+ *     with `estate_cc`: `estate_cc --gc -o file.est.c file.est`
+ * @li in your boilerplate, implement your callbacks
+ * @li in your boilerplate, attach user data if needed
+ * @li that's it!!
+ *
  *
  * @section estate_syntax Estate Descriptive Syntax
- * @todo
+ *
+ * The estate language is very easy to understand and write.
+ * The reference of the language is defined here: @ref Estate_Ref
+ *
  *
  * @section estate_compiler The Estate Compiler
  * @todo
+ *
+ *
+ * @section estate_compiling How to compile
+ *
+ * You must link your program to the Estate library. Estate supports
+ * pkg-config which makes the task easier:
+ *
+   @verbatim
+   gcc -Wall -Wextra prog.c $(pkg-config --cflags --libs estate)
+   @endverbatim
+ *
+ * But you may also want to take advantage of the Estate descriptive
+ * language, write your FSM in a dedicated file, describe it in a
+ * comprehensive manner, and generate automatically an Estate FSM.
+ *
  *
  * @section estate_api The Estate Application Programming Interface (API)
  *

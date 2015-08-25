@@ -1,0 +1,69 @@
+/**
+ * @page Estate_Ref Estate Language Reference
+ *
+ * @section toc Table of Contents
+ *
+ * @li @ref ext
+ * @li @ref comments
+ * @li @ref blocks
+ * @li @ref fsm
+ * @li @ref fsm_transit
+ * @li @ref fsm_model
+ *
+ * @section ext Extension
+ *
+ * An estate file shall have an extension of type `.est`.
+ * However, this is not a requirement.
+ *
+ * @section comments Estate Comments
+ *
+ * Estate support two types of comments:
+ * @li single-line comments, which are identical to C++ comments
+ * @li multi-line comments, which are identical to C comments
+ *
+ *
+ * @section blocks Estate Blocks
+ *
+ * Estate is composed in blocks. A block is defined with the
+ * following structure:
+ *
+   @verbatim
+   block_name {
+      // contents of the block ...
+   }
+   @endverbatim
+ *
+ * Whitespaces, new lines, etc. do not interfere with a block structure.
+ *
+ *
+ * @section fsm Finite State Machine Description
+ *
+ * The top-level blocks are description of finite state machines.
+ *
+ * Example:
+   @verbatim
+   tcp_fsm {
+      // description of the TCP state machine
+   }
+   @endverbatim
+ *
+ *
+ * @section fsm_transit Transitions
+ *
+ * Inside a block describing a finite state machine, the `transitions` block,
+ * which is mandatory allows to describe the transitions.
+ * The `transitions` block is composed of several blocks:
+ * @li the `model` block, which describes the structure of the FSM;
+ * @li more detailed descriptions of the transitions written in the `model` block
+ *
+ * @subsection fsm_model Model
+ *
+ * The `model` block must contain a serie of lines with respect to the following format:
+ *
+   @verbatim
+   transition_name : from_state_name > to_state_name; // '->' can be used in place of '>'
+   @endverbatim
+
+   Spaces are optional, but advised for lisibility.
+ */
+
