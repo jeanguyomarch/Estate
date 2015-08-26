@@ -72,6 +72,7 @@
  * comprehensive manner, and generate automatically an Estate FSM.
  *
  *
+ *
  * @section estate_api The Estate Application Programming Interface (API)
  *
  * The API is split into several modules:
