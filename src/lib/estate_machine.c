@@ -185,6 +185,7 @@ estate_machine_transition_do(Estate_Machine *mach,
 
    Estate_Transition *tr;
    Eina_Stringshare *shr;
+   Eina_Array_Iterator iter;
    unsigned int i;
    Eina_Bool found = EINA_FALSE;
 
@@ -198,10 +199,10 @@ estate_machine_transition_do(Estate_Machine *mach,
    shr = eina_stringshare_add(transition);
 
    /* Find transition */
-   for (i = 0; i < mach->current_state->transit_count; ++i)
+   EINA_ARRAY_ITER_NEXT(mach->current_state->transit, i, tr, iter)
      {
-        tr = mach->current_state->transit[i];
-        if (shr == tr->name)
+        /* Stringshares... I can do that */
+        if (tr->name == shr)
           {
              found = EINA_TRUE;
              break;

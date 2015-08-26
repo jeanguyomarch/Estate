@@ -87,9 +87,8 @@ struct _Estate_State
 {
    Eina_Stringshare     *name;    /**< Name of the state */
    Estate_Cb_Wrapper     cb[2];   /**< Enterer and Exiter callbacks */
-   Estate_Transition   **transit; /**< Array of transitions pointers outgoing
+   Eina_Array           *transit; /**< Array of transitions pointers outgoing
                                     from this state */
-   unsigned int          transit_count; /**< Count of transitions */
 };
 
 /**

@@ -53,10 +53,9 @@ struct _Fsm
 
 struct _Fsm_Wrapper
 {
-   Fsm          *fsm;
-   FILE         *f;
-   State        *cstate;
-   unsigned int  count;
+   Fsm   *fsm;
+   FILE  *f;
+   State *cstate;
 };
 
 extern int _estate_cc_dom;
