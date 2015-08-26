@@ -1,5 +1,22 @@
 #include "estate_cc.h"
 
+
+static Eina_Bool
+_each_transitions_gc_from_count_cb(const Eina_Hash *hash   EINA_UNUSED,
+                                   const void      *key    EINA_UNUSED,
+                                   void            *data,
+                                   void            *fdata)
+{
+   Fsm_Wrapper *wrap = fdata;
+   Transit *t = data;
+
+   if (t->from == wrap->cstate->name)
+     wrap->count++;
+
+   return EINA_TRUE;
+}
+
+
 static Eina_Bool
 _each_transitions_gc_alloc_cb(const Eina_Hash *hash   EINA_UNUSED,
                               const void      *key    EINA_UNUSED,
@@ -26,10 +43,13 @@ _each_states_gc_alloc_cb(const Eina_Hash *hash   EINA_UNUSED,
    Fsm_Wrapper*wrap = fdata;
    State *s = data;
 
+   wrap->count = 0;
+   wrap->cstate = s;
+   eina_hash_foreach(wrap->fsm->transitions, _each_transitions_gc_from_count_cb, wrap);
    fprintf(wrap->f,
-           "   s_%s = estate_state_new(fsm);\n"
+           "   s_%s = estate_state_new(fsm, %u);\n"
            "   if (EINA_UNLIKELY(s_%s == NULL)) goto fsm_fail;\n",
-           s->name, s->name);
+           s->name, wrap->count, s->name);
 
    return EINA_TRUE;
 }
