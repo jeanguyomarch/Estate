@@ -1,2 +1,2 @@
 MAINTAINERCLEANFILES = Makefile.in
-SUBDIRS = lib bin tests examples
+SUBDIRS = lib bin tests examples benchmarks

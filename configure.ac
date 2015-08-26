@@ -73,6 +73,7 @@ AC_CONFIG_FILES([
    src/bin/Makefile
    src/tests/Makefile
    src/examples/Makefile
+   src/benchmarks/Makefile
 ])
 AC_OUTPUT
 
