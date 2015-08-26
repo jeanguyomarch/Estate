@@ -1,69 +1,397 @@
 /**
- * @page Estate_Ref Estate Language Reference
- *
- * @section toc Table of Contents
- *
- * @li @ref ext
- * @li @ref comments
- * @li @ref blocks
- * @li @ref fsm
- * @li @ref fsm_transit
- * @li @ref fsm_model
- *
- * @section ext Extension
- *
- * An estate file shall have an extension of type `.est`.
- * However, this is not a requirement.
- *
- * @section comments Estate Comments
- *
- * Estate support two types of comments:
- * @li single-line comments, which are identical to C++ comments
- * @li multi-line comments, which are identical to C comments
- *
- *
- * @section blocks Estate Blocks
- *
- * Estate is composed in blocks. A block is defined with the
- * following structure:
- *
-   @verbatim
+   @page Estate_Ref Estate Language Reference
+   @brief The Estate Language Reference
+
+   @tableofcontents
+
+   # Basic Syntactic Elements   {#syntax}
+
+   ## Extension                  {#extension}
+
+   An estate file shall have an extension of type `.est`.
+   However, this is not a requirement.
+
+   ## Estate Comments            {#comments}
+
+   Estate support two types of comments:
+   @li single-line comments, which are identical to C++ comments
+   @li multi-line comments, which are identical to C comments
+
+
+   ## Estate Blocks              {#blocks}
+
+   Estate is composed in blocks. A block is defined with the
+   following structure:
+
+   ~~~~~~~~~~~~~~~{.est}
    block_name {
       // contents of the block ...
    }
-   @endverbatim
- *
- * Whitespaces, new lines, etc. do not interfere with a block structure.
- *
- *
- * @section fsm Finite State Machine Description
- *
- * The top-level blocks are description of finite state machines.
- *
- * Example:
-   @verbatim
+   ~~~~~~~~~~~~~~~
+
+   Whitespaces, new lines, etc. do not interfere with a block structure.
+
+
+
+   ## Estate Properties          {#properties}
+
+   Estate properties are syntactic elements that are described as it follows:
+   - name of the property;
+   - column (':');
+   - value of the property;
+   - semicolumn (';').
+   Properties must belong to a block.
+
+   Example:
+
+   ~~~~~~~~~~~~~~~{.est}
+   block {
+      property: value;
+   }
+   ~~~~~~~~~~~~~~~
+
+
+
+
+   ## Estate Attributes          {#attributes}
+
+   Estate attributes are syntactic elements that are described as it follows:
+   - arobase ('\@');
+   - attribute name.
+   Attributes are used to give special meaning to blocks.
+
+
+   Example:
+
+   ~~~~~~~~~~~~~~~{.est}
+   block @attribute {
+   }
+   ~~~~~~~~~~~~~~~
+
+
+   # About Interaction with C           {#about-c}
+
+   The purpose of the estate language is to describe a finite state machine
+   that will be used by a code generator to provided an implementation of
+   this finite state machine.
+
+   Currently, only C is supported.
+
+   To allow events to be triggered when the state machine changes, callbacks
+   can be registered directly from the estate file, and a custom user data
+   can also be provided (i.e. void*).
+
+   ## Callbacks Binding                 {#callbacks-binding}
+
+   `estate_cc` with the `--gi` (generates implementation) option generates a
+   C boilerplate that will present:
+   - empty functions of type Estate_Cb which names have been provided in the estate file;
+   - a loader function and its prototype that will allow you to load in your C
+     implementation the finite state machines described in your estate file;
+   - an include  of the C implementation of the state machine.
+
+   When `estate_cc` will generate the state machine using the Estate library,
+   it will search for the symbol provided to the `func` property. It therefore
+   must be visible to the compiling unit in which the generated state machine
+   will reside.
+
+
+   ## User Data Binding                 {#udata-binding}
+
+   When a callback function is called, its first parameter (of type void*)
+   will point to a user data if one has been specified (will be NULL otherwise).
+
+   Since user data can be extremely versatile and various in C, it has been
+   chosen, to preserve the flexibility of the language to associate the user
+   data with a key.
+   In the C implementation, the developer can attach its own user data
+   with the corresponding key. When a callback is called:
+   - Estate looks for the key:
+     - if there is none, user data is NULL;
+     - else, the user data is retrieved from the key.
+       - if no user data has been registered, an error is emitted;
+       - else, the user data is cached and forwared to the callback.
+                                                        
+
+
+
+   # Complete Example  {#example}
+
+   The example below illustrates the capabilities of the estate language:
+
+   ~~~~~~~~~~~~~~~{.est}
+   fsm_1 {
+
+      transitions {
+         model {
+            // Transition from state_1 to state_2
+            transition_1 : state_1 > state_2;
+
+            // Transition from state_2 to state_1
+            transition_2 : state_2 > state_1;
+         }
+         transition_1 {
+            cb {
+               func: _callback_when_transition_1_is_activated;
+            }
+         }
+      }
+
+      states {
+         state_1 {
+            enterer {
+               func: _callback_when_entering_state_1;
+               data: string_to_retrieve_user_data;
+            }
+            // exiter block is optional
+         }
+         state_2 @init {
+            // fsm_1 is initialized at state 'state_2'
+            exiter {
+               func: _callback_when_exiting_state_2;
+               // data is optional
+            }
+            // enterer block is optional
+         }
+      }
+
+   }
+
+   fsm_2 {
+      // and so on ...
+   }
+   ~~~~~~~~~~~~~~~
+
+   Syntax elements are described in the next sections.
+
+
+   # Description of the Language Elements       {#elements}
+
+
+   ## Finite State Machine Description   {#fsm_descr}
+
+   The top-level blocks are description of finite state machines.
+
+   Example:
+   ~~~~~~~~~~~~~~~{.est}
    tcp_fsm {
       // description of the TCP state machine
    }
-   @endverbatim
- *
- *
- * @section fsm_transit Transitions
- *
- * Inside a block describing a finite state machine, the `transitions` block,
- * which is mandatory allows to describe the transitions.
- * The `transitions` block is composed of several blocks:
- * @li the `model` block, which describes the structure of the FSM;
- * @li more detailed descriptions of the transitions written in the `model` block
- *
- * @subsection fsm_model Model
- *
- * The `model` block must contain a serie of lines with respect to the following format:
- *
-   @verbatim
-   transition_name : from_state_name > to_state_name; // '->' can be used in place of '>'
-   @endverbatim
+   ~~~~~~~~~~~~~~~
+
+   There can be several definitions of finite state machines in
+   the same file, but they cannot have the same name.
+
+
+
+   ## Transitions                        {#transitions}
+
+   Inside a block describing a finite state machine, the `transitions` block,
+   which is mandatory allows to describe the transitions.
+   The `transitions` block is composed of several blocks:
+   - the `model` block, which describes the structure of the FSM;
+   - more detailed descriptions of the transitions written in the `model` block
+
+   Example:
+   ~~~~~~~~~~~~~~~{.est}
+   fsm {
+      transitions {
+         // ...
+      }
+   }
+   ~~~~~~~~~~~~~~~
+
+   ## Transitions Model                             {#model}
+
+   The `model` block must contain a serie of lines with respect to the following formats:
+
+   ~~~~~~~~~~~~~~~{.est}
+   transition_name : from_state_name > to_state_name;
+   ~~~~~~~~~~~~~~~
+
+   and:
+
+   ~~~~~~~~~~~~~~~{.est}
+   transition_name : from_state_name -> to_state_name;
+   ~~~~~~~~~~~~~~~
+
+   which are strictly equivalent.
+
 
    Spaces are optional, but advised for lisibility.
+
+   Example:
+
+   ~~~~~~~~~~~~~~~{.est}
+   fsm {
+      transitions {
+         model {
+            transition : state_from > state_to;
+         }
+      }
+   }
+   ~~~~~~~~~~~~~~~
+
+
+
+   ## Transition Description            {#transit_descr}
+
+   In the `transitions` block, *after* the `model` block are allowed
+   blocks which can describe any transition which has been defined in the `model`
+   block.
+
+   Example:
+
+   ~~~~~~~~~~~~~~~{.est}
+   fsm {
+      transitions {
+         transition_name {
+            // description of the transition
+         }
+      }
+   }
+   ~~~~~~~~~~~~~~~
+
+
+
+   ## Transition Callback              {#transit_cb}
+
+   Within the description of a transition, the function to be called when
+   the transition is activated can be specified. It is a callback function.
+   The `cb` block must be used to fulfil that purpose.
+   Inside the `cb` block, the callback function is specified through the
+   property `func`. The property `data` allows to provide the key for the
+   user data to be retrieved, as illustrated in the example below:
+
+   ~~~~~~~~~~~~~~~{.est}
+   fsm {
+      transitions {
+         transition_name {
+            cb {
+               func: symbol_of_the_function;
+               data: key_of_the_user_data;
+            }
+         }
+      }
+   }
+   ~~~~~~~~~~~~~~~
+
+   This block and its properties are optional.
+   No attribute can be attached to this block.
+
+
+   ## States Block                {#states}
+
+   The `states` block, which parent is the finite state machine, allows
+   to describe more precisely the states of the state machine. It must
+   be provided *after* the `transitions` block.
+
+   Example:
+
+   ~~~~~~~~~~~~~~~{.est}
+   fsm {
+      transitions {
+         // ...
+      }
+      states {
+         // Description of the states...
+      }
+   }
+   ~~~~~~~~~~~~~~~
+
+   ## States Description        {#state}
+
+   The states are individually described by a block which name is the name of
+   the state to be described, and which must be contained in the `states` block.
+   A state is allowed to be described only if it appears in the `transitions::model` block.
+
+   A state description block is allowed to contain two optional blocks:
+   - `enterer`
+   - and `exiter`.
+
+   Furthermore, a state description block can receive the `\@init` attribute.
+
+   Example:
+
+   ~~~~~~~~~~~~~~~{.est}
+   fsm {
+      states {
+         a_state @init {
+            enterer {
+            }
+            exiter {
+            }
+         }
+      }
+   }
+   ~~~~~~~~~~~~~~~
+
+
+   ## Init Attribute            {#init}
+
+   The init attribute can be attached to a state description blocK.
+   A finite state machine must be initialized to an initial state.
+   Ideally the topology of the state machine has a built-in initial node,
+   however it may not always be the case because it is a convenient shortcut.
+   The `\@init` attribute  allows to enforce that one state is the initial node.
+   There can only be one initial node, therefore if the topology forces a node
+   to be the initial node, using `\@init` on another node will generate an error
+   at compile-time.
+
+   Example:
+
+   ~~~~~~~~~~~~~~~{.est}
+   fsm {
+      states {
+         a_state @init {
+            // Description of the state
+         }
+      }
+   }
+   ~~~~~~~~~~~~~~~
+
+
+   ## Enterer Block             {#enterer}
+
+   When a transition is activated, the state machine leaves a state and points to
+   a new one. When the transition activates a new state, the callback described
+   in the `enterer` block will be called, with its user data if provided.
+
+   Example:
+
+   ~~~~~~~~~~~~~~~{.est}
+   fsm {
+      states {
+         a_state {
+            enterer {
+               func: function_to_be_called;
+               data: user_data_key;
+            }
+         }
+      }
+   }
+   ~~~~~~~~~~~~~~~
+
+   ## Exiter Block             {#exiter}
+
+   When a transition is activated, the state machine leaves a state and points to
+   a new one. When the transition leaves an active state, the callback described
+   in the `exiter` block will be called, with its user data if provided.
+
+   Example:
+
+   ~~~~~~~~~~~~~~~{.est}
+   fsm {
+      states {
+         a_state {
+            exiter {
+               func: function_to_be_called;
+               data: user_data_key;
+            }
+         }
+      }
+   }
+   ~~~~~~~~~~~~~~~
+
  */
 
