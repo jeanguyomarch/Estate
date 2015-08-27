@@ -210,12 +210,25 @@ EAPI Estate_State *estate_state_new(Estate_Machine *mach,
 EAPI void estate_state_free(Estate_State *st);
 
 /**
+ * Sorting function that is aimed to be used by qsort() and friends.
+ * It must be used to sort an array of transitions before passing it
+ * to estate_state_init()
+ *
+ * @param d1 First transition to compare
+ * @param d2 Second transition to compare
+ * @return see the qsort() manual
+ */
+EAPI int estate_state_sort_transitions_cb(const void *d1,
+                                          const void *d2);
+
+/**
  * Sets a pre-allocated state up
  *
  * @param st The pre-allocated state to set up
  * @param name The name to attach to the state
  * @param transitions An array of the @c transit_count transitions outgoing
- *        from the state @c st
+ *        from the state @c st. It must be sort with estate_state_sort_transitions_cb()
+ *        before being passed to this function
  * @param transit_count The count of transitions in the @c transitions array
  * @param enterer The function to be called when a transition ends to the state @c st
  * @param enterer_datakey The string used to retrieve the user data upon the first 
@@ -224,6 +237,8 @@ EAPI void estate_state_free(Estate_State *st);
  * @param exiter_datakey The string used to retrieve the user data upon the first
  *        call to @c exiter
  * @return EINA_TRUE on success, EINA_FALSE on failure
+ *
+ * @see estate_state_sort_transitions_cb()
  */
 EAPI Eina_Bool
 estate_state_init(Estate_State             *st,

@@ -46,7 +46,6 @@ estate_state_free(Estate_State *st)
    free(st);
 }
 
-
 EAPI Eina_Bool
 estate_state_init(Estate_State             *st,
                   const char               *name,
@@ -62,7 +61,7 @@ estate_state_init(Estate_State             *st,
    EINA_SAFETY_ON_NULL_RETURN_VAL(transitions, EINA_FALSE);
    EINA_SAFETY_ON_TRUE_RETURN_VAL(transit_count != st->transit_count, EINA_FALSE);
 
-   /* Copy the transition pointers */
+   /* Copy the transition pointers and sort it */
    memcpy(st->transit, transitions,
           transit_count * sizeof(Estate_Transition *));
 
@@ -112,5 +111,16 @@ _estate_state_cb_call(Estate_Machine          *mach,
         _estate_misc_cb_cache(mach, wrp);
         wrp->func(wrp->data, type, tr);
      }
+}
+
+EAPI int
+estate_state_sort_transitions_cb(const void *d1,
+                                 const void *d2)
+{
+   const Estate_Transition *t1 = d1;
+   const Estate_Transition *t2 = d2;
+
+   /* Sort by stringshares */
+   return (int)(t1->name - t2->name);
 }
 
