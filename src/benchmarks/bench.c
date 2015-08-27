@@ -17,14 +17,16 @@ estate_fsm_bench_load(void)
 static void
 _simple_benchmark_cb(int request EINA_UNUSED)
 {
-   for (unsigned int i = 0; i < COUNT; ++i)
+   unsigned int i;
+   for (i = 0; i < COUNT; ++i)
      estate_machine_transition_do(_fsm, "t0");
 }
 
 static void
 _fail_benchmark_cb(int request EINA_UNUSED)
 {
-   for (unsigned int i = 0; i < COUNT; ++i)
+   unsigned int i;
+   for (i = 0; i < COUNT; ++i)
      estate_machine_transition_do(_fsm, "I_WILL_FAIL");
 }
 
