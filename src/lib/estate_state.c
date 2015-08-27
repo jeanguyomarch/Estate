@@ -58,12 +58,12 @@ estate_state_init(Estate_State             *st,
 {
    EINA_SAFETY_ON_NULL_RETURN_VAL(st, EINA_FALSE);
    EINA_SAFETY_ON_NULL_RETURN_VAL(name, EINA_FALSE);
-   EINA_SAFETY_ON_NULL_RETURN_VAL(transitions, EINA_FALSE);
    EINA_SAFETY_ON_TRUE_RETURN_VAL(transit_count != st->transit_count, EINA_FALSE);
 
-   /* Copy the transition pointers and sort it */
-   memcpy(st->transit, transitions,
-          transit_count * sizeof(Estate_Transition *));
+   /* Copy the transition pointers if necessary */
+   if (transitions)
+     memcpy(st->transit, transitions,
+            transit_count * sizeof(Estate_Transition *));
 
    /* Set enterer */
    st->cb[0].func = enterer;
