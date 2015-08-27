@@ -34,6 +34,15 @@ Estate is supported by vim.
 Look there: https://github.com/jeanguyomarch/vim-estate.
 
 
+Documentation
+-------------
+
+If you have `doxygen`, you can build the documentation:
+- `make doc`
+and open it in your web browser, it is:  `doc/html/index.html`.
+
+
+
 Example: hello.est
 ------------------
 
