@@ -4,9 +4,12 @@ static int
 _sort_cb(const void *d1,
          const void *d2)
 {
-   const Transit *t1 = d1;
-   const Transit *t2 = d2;
+   /* Yes... that's a little tricky. d1 and d2 are pointers on data,
+    * which are pointer themselves... */
+   const Transit *t1 = (const Transit *)(*(Transit * const *)d1);
+   const Transit *t2 = (const Transit *)(*(Transit * const *)d2);
 
+   /* Sort by STRINGSHARES and not strings!! */
    return (int)(t1->name - t2->name);
 }
 
@@ -60,6 +63,7 @@ _each_states_gc_alloc_cb(const Eina_Hash *hash   EINA_UNUSED,
    wrap->cstate = s;
    eina_hash_foreach(wrap->fsm->transitions, _each_transitions_gc_from_cache_cb, wrap);
    qsort(s->trs, s->trs_count, sizeof(Transit *), _sort_cb);
+
    fprintf(wrap->f,
            "   s_%s = estate_state_new(fsm, %u);\n"
            "   if (EINA_UNLIKELY(s_%s == NULL)) goto fsm_fail;\n",

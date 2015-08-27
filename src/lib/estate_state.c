@@ -117,8 +117,9 @@ EAPI int
 estate_state_sort_transitions_cb(const void *d1,
                                  const void *d2)
 {
-   const Estate_Transition *t1 = d1;
-   const Estate_Transition *t2 = d2;
+#define CAST(var) (const Estate_Transition *)(*(Estate_Transition * const *)var)
+   const Estate_Transition *t1 = CAST(d1);
+   const Estate_Transition *t2 = CAST(d2);
 
    /* Sort by stringshares */
    return (int)(t1->name - t2->name);

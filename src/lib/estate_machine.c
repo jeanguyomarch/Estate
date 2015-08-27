@@ -1,5 +1,17 @@
 #include "estate_private.h"
 
+static int
+_compare_cb(const void *key,
+            const void *data)
+{
+   Eina_Stringshare *shr = key;
+   const Estate_Transition *t =
+      (const Estate_Transition *)(*(Estate_Transition * const *)data);
+
+   return (int)(shr - t->name);
+}
+
+
 EAPI Estate_Machine *
 estate_machine_new(unsigned int states,
                    unsigned int transitions)
@@ -183,10 +195,8 @@ estate_machine_transition_do(Estate_Machine *mach,
    EINA_SAFETY_ON_NULL_RETURN_VAL(mach, EINA_FALSE);
    EINA_SAFETY_ON_NULL_RETURN_VAL(transition, EINA_FALSE);
 
-   Estate_Transition *tr;
+   Estate_Transition *tr = NULL, **ptr;
    Eina_Stringshare *shr;
-   unsigned int i;
-   Eina_Bool found = EINA_FALSE;
 
    if (EINA_UNLIKELY(!mach->locked))
      {
@@ -197,19 +207,15 @@ estate_machine_transition_do(Estate_Machine *mach,
    /* For immediate search */
    shr = eina_stringshare_add(transition);
 
-   /* Find transition */
-   for (i = 0; i < mach->current_state->transit_count; ++i)
-     {
-        tr = mach->current_state->transit[i];
-        if (shr == tr->name)
-          {
-             found = EINA_TRUE;
-             break;
-          }
-     }
+   /* Binary search (this is why the transitions array must be sorted at init */
+   ptr = bsearch(shr, mach->current_state->transit,
+                 mach->current_state->transit_count, sizeof(Estate_Transition *),
+                 _compare_cb);
+   if (ptr)
+     tr = *ptr;
 
    /* Gracefully fail if no transition is available */
-   if (!found)
+   if (!tr)
      {
         ERR("Could not find transition \"%s\" at current state (%s)",
             transition, mach->current_state->name);
