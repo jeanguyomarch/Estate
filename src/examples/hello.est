@@ -1,0 +1,44 @@
+/*
+ * hello.est
+ */
+
+hello { // hello is the name of the finite state machine
+   transitions {
+      /* Describe the transitions */
+      model {
+         leave : Home > Walk;
+         sayHello : Walk > Chat;
+         goShopping : Chat > Shop;
+         goHome : Shop > Home;
+         goToHell : Shop > Hell;
+      }
+
+      /* Provide the callback '_say_hello_cb' to the transition 'sayHello' */
+      sayHello {
+         cb {
+            func: _say_hello_cb;
+         }
+      }
+   }
+
+   states {
+      /* Provide the callback '_leave_house_cb' to the state 'Home'.
+       * It will be called when exiting the state 'Home' */
+      Home @init {
+         exiter {
+            func: _leave_house_cb;
+         }
+      }
+
+      /* Provide the callback '_burn_in_hell_cb' to the state 'Hell'.
+       * Register a user data with the key 'ShoppingCart'.
+       * The callback will be called when entering the state 'Hell' */
+      Hell {
+         enterer {
+            func: _burn_in_hell_cb;
+            data: ShoppingCart;
+         }
+      }
+   }
+}
+
