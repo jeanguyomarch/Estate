@@ -27,6 +27,13 @@ Quick guide:
 - `ldconfig` (probably as root) if you are using Linux.
 
 
+Vim syntax support
+------------------
+
+Estate is supported by vim.
+Look there: https://github.com/jeanguyomarch/vim-estate.
+
+
 Example: hello.est
 ------------------
 
@@ -137,7 +144,7 @@ estate_cc  --output hello.c  --gi hello.est.c  hello.est
 Note that you have to specify the name of the C file generated earlier (`hello.est.c`).
 Now you have a C file that looks like this:
 
-```
+```c
 #include <Estate.h> // You need the Estate library
 #include "hello.est.c" // The generated implementation of the finite state machine
 
@@ -179,7 +186,7 @@ use the corresponding argument.
 
 Finally, let's implement:
 
-```
+```c
 #include <Estate.h> // You need the Estate library
 #include "hello.est.c" // The generated implementation of the finite state machine
 
