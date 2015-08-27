@@ -47,6 +47,7 @@ Makefile.in
 /src/tests/estate_suite
 /src/bin/estate_cc
 /src/examples/turnstile
+/src/benchmarks/bench
 
 /doc/html
 /doc/Doxyfile
