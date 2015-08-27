@@ -1,6 +1,8 @@
 #include <Estate.h>
 #include "bench.est.c"
 
+#define COUNT 10000000
+
 static Estate_Machine *_fsm = NULL;
 
 /* Use the prototype below to export the loading function */
@@ -15,58 +17,16 @@ estate_fsm_bench_load(void)
 static void
 _simple_benchmark_cb(int request EINA_UNUSED)
 {
-   estate_machine_transition_do(_fsm, "t1");
-   estate_machine_transition_do(_fsm, "t2");
+   for (unsigned int i = 0; i < COUNT; ++i)
+     estate_machine_transition_do(_fsm, "t0");
 }
 
 static void
 _fail_benchmark_cb(int request EINA_UNUSED)
 {
-   estate_machine_transition_do(_fsm, "I_WILL_FAIL");
-   estate_machine_transition_do(_fsm, "I_WILL_FAIL");
+   for (unsigned int i = 0; i < COUNT; ++i)
+     estate_machine_transition_do(_fsm, "I_WILL_FAIL");
 }
-
-#if 0
-static void
-_big_benchmark_cb(int request EINA_UNUSED)
-{
-   unsigned int i;
-   const unsigned int nb = 100000;
-
-   for (i = 0; i < nb; ++i)
-     {
-        estate_machine_transition_do(_fsm, "t1");
-        estate_machine_transition_do(_fsm, "t2");
-        estate_machine_transition_do(_fsm, "t1");
-        estate_machine_transition_do(_fsm, "t2");
-        estate_machine_transition_do(_fsm, "t1");
-        estate_machine_transition_do(_fsm, "t2");
-        estate_machine_transition_do(_fsm, "t1");
-        estate_machine_transition_do(_fsm, "t7");
-        estate_machine_transition_do(_fsm, "t8");
-        estate_machine_transition_do(_fsm, "t7");
-        estate_machine_transition_do(_fsm, "t8");
-        estate_machine_transition_do(_fsm, "t7");
-        estate_machine_transition_do(_fsm, "t9");
-        estate_machine_transition_do(_fsm, "t10");
-        estate_machine_transition_do(_fsm, "t9");
-        estate_machine_transition_do(_fsm, "t10");
-        estate_machine_transition_do(_fsm, "t9");
-        estate_machine_transition_do(_fsm, "t12");
-        estate_machine_transition_do(_fsm, "t7");
-        estate_machine_transition_do(_fsm, "t4"); /* Allows to loop on t1 */
-
-        /* Below: will fail (no such transition) */
-        estate_machine_transition_do(_fsm, "I_WILL_FAIL");
-        estate_machine_transition_do(_fsm, "I_WILL_FAIL");
-        estate_machine_transition_do(_fsm, "I_WILL_FAIL");
-        estate_machine_transition_do(_fsm, "I_WILL_FAIL");
-        estate_machine_transition_do(_fsm, "I_WILL_FAIL");
-        estate_machine_transition_do(_fsm, "I_WILL_FAIL");
-        estate_machine_transition_do(_fsm, "I_WILL_FAIL");
-     }
-}
-#endif
 
 int
 main(void)
@@ -84,7 +44,6 @@ main(void)
     * generate errors in eina_log.*/
    eina_log_domain_level_set("estate", EINA_LOG_LEVEL_CRITICAL);
 
-//   eina_benchmark_register(bmk, "full", _big_benchmark_cb, 1, 100, 1);
    eina_benchmark_register(bmk, "simple", _simple_benchmark_cb, 1, 100, 1);
    eina_benchmark_register(bmk, "fail", _fail_benchmark_cb, 1, 100, 1);
    eina_benchmark_run(bmk);

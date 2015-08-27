@@ -1,26 +1,24 @@
-/*      t1  t2
- *   s1 <----> s2
- *   ^  \       ^
- *   |   ----\  |
- *   v        \ v
- *   s4 <----> s3
- */
-
 bench {
    transitions {
       model {
-         t1  : s1 > s2;
-         t2  : s2 > s1;
-         t3  : s1 > s3;
-         t4  : s3 > s1;
-         t5  : s1 > s4;
-         t6  : s4 > s1;
-         t7  : s2 > s3;
-         t8  : s3 > s2;
-         t9  : s3 > s4;
-         t10 : s4 > s3;
-         t11 : s2 > s4;
-         t12 : s4 > s2;
+         t1 : s0 > s1;
+         t2 : s0 > s2;
+         t3 : s0 > s3;
+         t4 : s0 > s4;
+         t5 : s0 > s5;
+         t6 : s0 > s6;
+         t7 : s0 > s7;
+         t8 : s0 > s8;
+         t9 : s0 > s9;
+
+         t0 : s0 > s0;
+
+         ta : s0 > sa;
+         tb : s0 > sb;
+         tc : s0 > sc;
+         td : s0 > sd;
+         te : s0 > se;
+         tf : s0 > sf;
       }
    }
    states {
