@@ -32,6 +32,9 @@ struct _State
       unsigned int from;
       unsigned int to;
    } check;
+
+   Transit **trs;
+   unsigned int trs_count;
 };
 
 struct _Transit
@@ -56,7 +59,6 @@ struct _Fsm_Wrapper
    Fsm          *fsm;
    FILE         *f;
    State        *cstate;
-   unsigned int  count;
 };
 
 extern int _estate_cc_dom;

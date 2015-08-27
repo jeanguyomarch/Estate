@@ -1,17 +1,31 @@
 #include "estate_cc.h"
 
+static int
+_sort_cb(const void *d1,
+         const void *d2)
+{
+   const Transit *t1 = d1;
+   const Transit *t2 = d2;
+
+   return (int)(t1->name - t2->name);
+}
 
 static Eina_Bool
-_each_transitions_gc_from_count_cb(const Eina_Hash *hash   EINA_UNUSED,
+_each_transitions_gc_from_cache_cb(const Eina_Hash *hash   EINA_UNUSED,
                                    const void      *key    EINA_UNUSED,
                                    void            *data,
                                    void            *fdata)
 {
    Fsm_Wrapper *wrap = fdata;
    Transit *t = data;
+   State *s = wrap->cstate;
 
-   if (t->from == wrap->cstate->name)
-     wrap->count++;
+   if (t->from == s->name)
+     {
+        s->trs = realloc(s->trs, (s->trs_count + 1) * sizeof(Transit *));
+        s->trs[s->trs_count] = t;
+        s->trs_count++;
+     }
 
    return EINA_TRUE;
 }
@@ -40,16 +54,16 @@ _each_states_gc_alloc_cb(const Eina_Hash *hash   EINA_UNUSED,
                          void            *data,
                          void            *fdata)
 {
-   Fsm_Wrapper*wrap = fdata;
+   Fsm_Wrapper *wrap = fdata;
    State *s = data;
 
-   wrap->count = 0;
    wrap->cstate = s;
-   eina_hash_foreach(wrap->fsm->transitions, _each_transitions_gc_from_count_cb, wrap);
+   eina_hash_foreach(wrap->fsm->transitions, _each_transitions_gc_from_cache_cb, wrap);
+   qsort(s->trs, s->trs_count, sizeof(Transit *), _sort_cb);
    fprintf(wrap->f,
            "   s_%s = estate_state_new(fsm, %u);\n"
            "   if (EINA_UNLIKELY(s_%s == NULL)) goto fsm_fail;\n",
-           s->name, wrap->count, s->name);
+           s->name, s->trs_count, s->name);
 
    return EINA_TRUE;
 }
@@ -82,21 +96,6 @@ _each_states_gc_declare_cb(const Eina_Hash *hash   EINA_UNUSED,
    return EINA_TRUE;
 }
 
-static Eina_Bool
-_each_transitions_gc_print_from_cb(const Eina_Hash *hash   EINA_UNUSED,
-                                   const void      *key    EINA_UNUSED,
-                                   void            *data,
-                                   void            *fdata)
-{
-   Fsm_Wrapper *wrap = fdata;
-   Transit *t = data;
-
-   if (t->from == wrap->cstate->name)
-     fprintf(wrap->f, "           t_%s,\n", t->name);
-
-   return EINA_TRUE;
-}
-
 static void
 _stringize_data(const char   *str,
                 char         *buf,
@@ -117,19 +116,33 @@ _each_states_gc_init_cb(const Eina_Hash *hash  EINA_UNUSED,
    Fsm_Wrapper *wrap = fdata;
    State *s = data;
    char b1[128], b2[128];
+   unsigned int i;
 
    _stringize_data(s->enterer.data, b1, sizeof(b1));
    _stringize_data(s->exiter.data, b2, sizeof(b2));
 
+   fprintf(wrap->f, "     {\n");
+
+   if (s->trs_count > 0)
+     {
+        fprintf(wrap->f, "        const Estate_Transition *trs[] = {\n");
+        for (i = 0; i < s->trs_count; ++i)
+          {
+             fprintf(wrap->f, "           t_%s", s->trs[i]->name);
+             if (i < s->trs_count - 1) fprintf(wrap->f, ",");
+             fprintf(wrap->f, "\n");
+          }
+        fprintf(wrap->f,
+                "        };\n"
+                "        const unsigned int trs_count = EINA_C_ARRAY_LENGTH(trs);\n");
+     }
+   else
+     fprintf(wrap->f,
+             "        const Estate_Transition **trs = NULL;\n"
+             "        const unsigned int trs_count = 0;\n");
+
    fprintf(wrap->f,
-           "     {\n"
-           "        const Estate_Transition *trs[] = {\n");
-   wrap->cstate = s;
-   eina_hash_foreach(wrap->fsm->transitions, _each_transitions_gc_print_from_cb, wrap);
-   fprintf(wrap->f,
-           "           NULL\n"
-           "        };\n"
-           "        chk = estate_state_init(s_%s, \"%s\", trs, EINA_C_ARRAY_LENGTH(trs) - 1,\n"
+           "        chk = estate_state_init(s_%s, \"%s\", trs, trs_count,\n"
            "                                %s, %s, %s, %s);\n"
            "        if (EINA_UNLIKELY(!chk)) goto fsm_fail;\n"
            "        chk = estate_machine_state_add(fsm, s_%s);\n"
