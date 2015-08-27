@@ -196,9 +196,11 @@ EAPI int estate_shutdown(void);
  * Allocates a state in a given finite state machine
  *
  * @param mach The parent finite state machine
+ * @param transit_count The number of transitions outgoing this state
  * @return The allocated state. NULL on failure
  */
-EAPI Estate_State *estate_state_new(Estate_Machine *mach);
+EAPI Estate_State *estate_state_new(Estate_Machine *mach,
+                                    unsigned int    transit_count);
 
 /**
  * Releases a state allocated by estate_state_new()
