@@ -35,7 +35,7 @@ PKG_CHECK_MODULES([EFL], [
 ])
 
 AC_ARG_ENABLE([tests],
-   [AS_HELP_STRING([--disable-tests],[Disable test suite. @<:@default=enabled@:>@])],
+   [AS_HELP_STRING([--enable-tests],[Enable test suite. @<:@default=disabled@:>@])],
    [
     if test "x${enableval}" = "xyes" ; then
        want_tests="yes"
@@ -43,7 +43,7 @@ AC_ARG_ENABLE([tests],
        want_tests="no"
     fi
    ],
-   [want_tests="yes"])
+   [want_tests="no"])
 
 if test "x${want_tests}" = "xyes" ; then
    PKG_CHECK_MODULES([CHECK], [check >= 0.9.5])
