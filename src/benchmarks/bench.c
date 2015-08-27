@@ -27,7 +27,7 @@ _fail_benchmark_cb(int request EINA_UNUSED)
 {
    unsigned int i;
    for (i = 0; i < COUNT; ++i)
-     estate_machine_transition_do(_fsm, "I_WILL_FAIL");
+     estate_machine_transition_do(_fsm, "XX");
 }
 
 int

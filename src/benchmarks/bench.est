@@ -22,7 +22,7 @@ bench {
       }
    }
    states {
-      s1 @init {}
+      s0 @init {}
    }
 }
 
