@@ -18,6 +18,7 @@ state_free(State *s)
    if (s->exiter.func) eina_stringshare_del(s->exiter.func);
    if (s->exiter.data) eina_stringshare_del(s->exiter.data);
    eina_stringshare_del(s->name);
+   if (s->trs) free(s->trs);
    free(s);
 }
 
