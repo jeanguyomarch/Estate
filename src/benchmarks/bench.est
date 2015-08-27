@@ -1,23 +1,23 @@
 bench {
    transitions {
       model {
-         t1 : s0 > s1;
-         t2 : s0 > s2;
-         t3 : s0 > s3;
-         t4 : s0 > s4;
          t5 : s0 > s5;
-         t6 : s0 > s6;
+         td : s0 > sd;
+         t3 : s0 > s3;
+         t1 : s0 > s1;
+         t4 : s0 > s4;
+         tc : s0 > sc;
          t7 : s0 > s7;
          t8 : s0 > s8;
-         t9 : s0 > s9;
+         te : s0 > se;
 
+         tb : s0 > sb;
+         t9 : s0 > s9;
          t0 : s0 > s0;
 
          ta : s0 > sa;
-         tb : s0 > sb;
-         tc : s0 > sc;
-         td : s0 > sd;
-         te : s0 > se;
+         t6 : s0 > s6;
+         t2 : s0 > s2;
          tf : s0 > sf;
       }
    }
