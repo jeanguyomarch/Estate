@@ -69,6 +69,8 @@ We can define a finite state machine with:
   - _Hell_: he is so f.cked...
 
 
+![Hello FSM](doc/img/hello.png)
+
 We wish to register events when some transition is activated or when
 some specific states are entered our exited.
 The implementation will be done in C, and as developer I have
