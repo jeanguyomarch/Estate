@@ -5,20 +5,15 @@
  *============================================================================*/
 
 EAPI Estate_State *
-estate_state_new(Estate_Machine *mach          EINA_UNUSED,
+estate_state_new(Estate_Machine *mach,
                  unsigned int    transit_count)
 {
    Estate_State *st = NULL;
 
-   /* XXX Use mach allocator */
-   st = calloc(1, sizeof(Estate_State));
+   st = _estate_mempool_state_push(mach->mempool);
    if (EINA_UNLIKELY(!st))
-     {
-        CRI("Failed to allocate Estate_State");
-        goto fail;
-     }
+     goto fail;
 
-   /* XXX Use mach allocator */
    if (transit_count != 0)
      {
         st->transit = calloc(transit_count, sizeof(Estate_Transition *));
@@ -41,9 +36,8 @@ EAPI void
 estate_state_free(Estate_State *st)
 {
    estate_state_deinit(st);
-   /* XXX Update when mach allocator will be used */
    free(st->transit);
-   free(st);
+   /* State will be freed by the machine */
 }
 
 EAPI Eina_Bool

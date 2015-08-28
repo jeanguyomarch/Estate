@@ -43,9 +43,12 @@ typedef struct _Estate_Cb_Wrapper Estate_Cb_Wrapper;
  */
 struct _Estate_Mempool
 {
-   void          *base; /**< Address returned by the default allocator */
-   unsigned char *ptr;  /**< Allocator's internal stack pointer */
-   size_t         mem;  /**< Total memory allocated */
+   unsigned char *base; /**< Address returned by the default allocator */
+   unsigned char *stack_states;
+   unsigned char *stack_transits;
+   unsigned char *end;  /**< Pointer to the end of the memory zone */
+   unsigned int   states_reg;
+   unsigned int   transit_reg;
 };
 
 /**
@@ -66,16 +69,19 @@ struct _Estate_Cb_Wrapper
  */
 struct _Estate_Machine
 {
-   Estate_Mempool       *mempool; /**< Allocator of the whole FSM */
+   Estate_Mempool      *mempool; /**< Allocator of the whole FSM */
 
-   Eina_Array           *states; /**< Array of all states */
-   Eina_Array           *transit; /**< Array of all transitions */
-   Estate_State         *current_state; /**< Points on the current state */
+   Estate_State        *states; /**< Array of all states */
+   Estate_Transition   *transit; /**< Array of all transitions */
+   Estate_State        *current_state; /**< Points on the current state */
 
-   Eina_Hash            *data; /**< Hash that contains all user data. Searchable
+   Eina_Hash           *data; /**< Hash that contains all user data. Searchable
                                  by Eina_Stringshare keys */
 
-   Eina_Bool             locked; /**< EINA_FALSE when the FSM is being built,
+   unsigned int states_count;
+   unsigned int transit_count;
+
+   Eina_Bool            locked; /**< EINA_FALSE when the FSM is being built,
                                    EINA_TRUE when ready */
 };
 
@@ -158,6 +164,22 @@ void _estate_state_cb_call(Estate_Machine *mach, Estate_State *st, const Estate_
  * Logs in the estate domain with a debug level
  */
 #define DBG(...) EINA_LOG_DOM_DBG(_estate_log_dom, __VA_ARGS__)
+
+
+Estate_Mempool *
+_estate_mempool_new(unsigned int states,
+                    unsigned int transitions,
+                    Eina_Bool    zero);
+
+void
+_estate_mempool_free(Estate_Mempool *mp);
+
+Estate_State *
+_estate_mempool_state_push(Estate_Mempool *mp);
+
+Estate_Transition *
+_estate_mempool_transition_push(Estate_Mempool *mp);
+
 
 /**
  * @}

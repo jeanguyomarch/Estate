@@ -16,39 +16,21 @@ EAPI Estate_Machine *
 estate_machine_new(unsigned int states,
                    unsigned int transitions)
 {
-   Estate_Machine *mach;
+   Estate_Machine *mach = NULL;
+   Estate_Mempool *mempool;
 
-#if 0
-   Eina_Mempool *mempool;
-   size_t mem;
-   mem = (states * sizeof(Estate_State)) +
-      (transitions * sizeof(Estate_Transition)) +
-      sizeof(Estate_Machine);
-   mempool = _estate_mempool_new(mem, EINA_FALSE);
-#endif
-
-   mach = malloc(sizeof(*mach));
-   if (EINA_UNLIKELY(!mach))
+   mempool = _estate_mempool_new(states, transitions, EINA_TRUE);
+   if (EINA_UNLIKELY(!mempool))
      {
-        CRI("Failed to allocate Estate_Machine");
+        CRI("Failed to create mempool");
         goto fail;
      }
 
-   /* Pre-allocate states */
-   mach->states = eina_array_new(states);
-   if (EINA_UNLIKELY(!mach->states))
-     {
-        CRI("Failed to allocate Estate_State array");
-        goto fail;
-     }
-
-   /* Pre-allocate transitions */
-   mach->transit = eina_array_new(transitions);
-   if (EINA_UNLIKELY(!mach->transit))
-     {
-        CRI("Failed to allocate Estate_Transition array");
-        goto fail;
-     }
+   /* Retrieve the machine and attach the mempool */
+   mach = (Estate_Machine *)mempool->base;
+   mach->mempool = mempool;
+   mach->states_count = states;
+   mach->transit_count = transitions;
 
    /* Create hash tha will contain data */
    mach->data = eina_hash_stringshared_new(NULL);
@@ -74,21 +56,7 @@ estate_machine_free(Estate_Machine *mach)
 {
    if (!mach) return;
    if (mach->data) eina_hash_free(mach->data);
-   if (mach->states)
-     {
-        Estate_State *st;
-        while ((st = eina_array_pop(mach->states)) != NULL)
-          estate_state_free(st);
-        eina_array_free(mach->states);
-     }
-   if (mach->transit)
-     {
-        Estate_Transition *tr;
-        while ((tr = eina_array_pop(mach->transit)) != NULL)
-          estate_transition_free(tr);
-        eina_array_free(mach->transit);
-     }
-   free(mach);
+   _estate_mempool_free(mach->mempool);
 }
 
 EAPI Eina_Bool
@@ -104,7 +72,14 @@ estate_machine_state_add(Estate_Machine     *mach,
         return EINA_FALSE;
      }
 
-   eina_array_push(mach->states, state);
+   mach->mempool->states_reg++;
+   if (EINA_UNLIKELY(mach->mempool->states_reg > mach->states_count))
+     {
+        CRI("You tried to add a state, but the amount of pre-registered "
+            "states has been reached");
+        return EINA_FALSE;
+     }
+
    return EINA_TRUE;
 }
 
@@ -121,7 +96,14 @@ estate_machine_transition_add(Estate_Machine          *mach,
         return EINA_FALSE;
      }
 
-   eina_array_push(mach->transit, tr);
+  mach->mempool->transit_reg++;
+   if (EINA_UNLIKELY(mach->mempool->transit_reg > mach->transit_count))
+     {
+        CRI("You tried to add a transition, but the amount of pre-registered "
+            "transitions has been reached");
+        return EINA_FALSE;
+     }
+
    return EINA_TRUE;
 
 }
@@ -183,6 +165,20 @@ estate_machine_lock(Estate_Machine     *mach,
 {
    EINA_SAFETY_ON_NULL_RETURN(mach);
    EINA_SAFETY_ON_NULL_RETURN(current);
+
+   /* Safety: was the machine complete? */
+   if (EINA_UNLIKELY(mach->mempool->states_reg != mach->states_count))
+     {
+        CRI("You have registered %u states, but only %u have been added",
+            mach->states_count, mach->mempool->states_reg);
+        return;
+     }
+   if (EINA_UNLIKELY(mach->mempool->transit_reg != mach->transit_count))
+     {
+        CRI("You have registered %u transitions, but only %u have been added",
+            mach->transit_count, mach->mempool->transit_reg);
+        return;
+     }
 
    mach->current_state = (Estate_State *)current;
    mach->locked = EINA_TRUE;

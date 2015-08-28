@@ -1,18 +1,16 @@
 #include "estate_private.h"
 
 EAPI Estate_Transition *
-estate_transition_new(Estate_Machine *mach EINA_UNUSED)
+estate_transition_new(Estate_Machine *mach)
 {
-   /* XXX Use mach allocator */
-   return calloc(1, sizeof(Estate_Transition));
+   return _estate_mempool_transition_push(mach->mempool);
 }
 
 EAPI void
 estate_transition_free(Estate_Transition *tr)
 {
    estate_transition_deinit(tr);
-   /* XXX Update when mach allocator will be used */
-   free(tr);
+   /* Transition is freed by the machine */
 }
 
 EAPI Eina_Bool

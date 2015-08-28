@@ -17,6 +17,7 @@ estate_main.c \
 estate_state.c \
 estate_transition.c \
 estate_machine.c \
+estate_mempool.c \
 estate_misc.c \
 estate_private.h
 
