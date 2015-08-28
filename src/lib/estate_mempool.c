@@ -41,7 +41,22 @@ _estate_mempool_new(unsigned int states,
 void
 _estate_mempool_free(Estate_Mempool *mp)
 {
-   EINA_SAFETY_ON_NULL_RETURN(mp);
+   unsigned int i;
+
+   /* Release all transitions */
+   for (i = 0; i < mp->transit_reg; ++i)
+     {
+        mp->stack_transits -= sizeof(Estate_Transition);
+        estate_transition_free((Estate_Transition *)mp->stack_transits);
+     }
+
+   /* Release all states */
+   for (i = 0; i < mp->states_reg; ++i)
+     {
+        mp->stack_states -= sizeof(Estate_State);
+        estate_state_free((Estate_State *)mp->stack_states);
+     }
+
    free(mp);
 }
 
