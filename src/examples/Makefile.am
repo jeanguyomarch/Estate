@@ -11,18 +11,18 @@ bin_PROGRAMS = turnstile hello
 turnstile_SOURCES = turnstile.c
 turnstile_LDADD = @EFL_LIBS@ $(top_builddir)/src/lib/libestate.la
 
-turnstile.est.c: turnstile.est Makefile
-	$(AM_V_EST)$(top_builddir)/src/bin/estate_cc --gc --output $@ $<
-
+turnstile.est.c:
+	$(AM_V_EST)$(top_builddir)/src/bin/estate_cc --gc --output $@ $(srcdir)/turnstile.est
 
 hello_SOURCES = hello.c
 hello_LDADD = @EFL_LIBS@ $(top_builddir)/src/lib/libestate.la
 
-hello.est.c: hello.est Makefile
-	$(AM_V_EST)$(top_builddir)/src/bin/estate_cc --gc --output $@ $<
-
+hello.est.c:
+	$(AM_V_EST)$(top_builddir)/src/bin/estate_cc --gc --output $@ $(srcdir)/hello.est
 
 BUILT_SOURCES = turnstile.est.c hello.est.c
 EXTRA_DIST = turnstile.est hello.est
-CLEANFILES = $(BUILT_SOURCES)
+
+clean-local:
+	$(RM) *.est.c
 
