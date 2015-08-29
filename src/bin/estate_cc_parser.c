@@ -511,6 +511,8 @@ estate_cc_parser_parse(Parser *p)
                    break;
 
                 case SM_TRANSITION_START:
+                   if (k == 0)
+                     PARSE_ERROR("Empty transition name");
                    t = transit_new(buf, k);
                    if (eina_hash_find(f->transitions, t->name))
                      PARSE_ERROR("Transition [%s] already defined", t->name);
