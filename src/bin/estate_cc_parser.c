@@ -521,11 +521,15 @@ estate_cc_parser_parse(Parser *p)
                    break;
 
                 case SM_TRANSITION_FROM:
+                   if (k == 0)
+                     PARSE_ERROR("Empty state name");
                    t->from = eina_stringshare_add_length(buf, k);
                    p->sm = SM_TRANSITION_TO;
                    break;
 
                 case SM_TRANSITION_TO:
+                   if (k == 0)
+                     PARSE_ERROR("Empty state name");
                    t->to = eina_stringshare_add_length(buf, k);
                    p->sm = SM_TRANSITION_START;
                    break;
