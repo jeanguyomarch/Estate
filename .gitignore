@@ -48,6 +48,8 @@ Makefile.in
 /src/bin/estate_cc
 /src/examples/turnstile
 /src/examples/hello
+/src/examples/reentrant
+/src/examples/estate_parser
 /src/benchmarks/bench
 
 /doc/html

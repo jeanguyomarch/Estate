@@ -1,0 +1,25 @@
+fsm {
+   transitions {
+      model {
+         t1 : s1 > s2;
+         t2 : s2 > s3;
+         t3 : s3 > s1;
+      }
+
+      t1 { cb { func: _transit_cb; } }
+      t2 { cb { func: _transit_cb; } }
+      t3 { cb { func: _transit_cb; } }
+   }
+
+   states {
+      s1 @init {
+         enterer { func: _forward; }
+      }
+      s2 {
+         enterer { func: _forward; }
+      }
+      s3 {
+         enterer { func: _forward; }
+      }
+   }
+}
