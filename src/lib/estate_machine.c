@@ -193,6 +193,7 @@ estate_machine_transition_do(Estate_Machine *mach,
 
    Estate_Transition *tr = NULL, **ptr;
    Eina_Stringshare *shr;
+   Eina_List *deferred;
 
    if (EINA_UNLIKELY(!mach->locked))
      {
@@ -200,11 +201,14 @@ estate_machine_transition_do(Estate_Machine *mach,
         return EINA_FALSE;
      }
 
-   if (EINA_UNLIKELY(mach->in_cb))
+   /* Deffer transition if this function is called in a callback context */
+   if (mach->in_cb)
      {
-        ERR("Attempt to do a transition, but it is executed in the context "
-            "of a state machine callback");
-        return EINA_FALSE;
+        DBG("Transition is called in a callback context. "
+            "Deferring transition %s after the entering callback...",
+            transition);
+        mach->cb_defer = eina_list_append(mach->cb_defer, transition);
+        return EINA_TRUE;
      }
 
    /* For immediate search */
@@ -236,6 +240,9 @@ estate_machine_transition_do(Estate_Machine *mach,
    /* Update current transition */
    mach->current_transition = tr;
 
+   /* Lock callbacks */
+   mach->in_cb = EINA_TRUE;
+
    /* Call exiter callback of current state */
    _estate_state_cb_call(mach, tr->from, tr, ESTATE_CB_TYPE_EXITER);
 
@@ -245,10 +252,24 @@ estate_machine_transition_do(Estate_Machine *mach,
    /* Call enterer callback of next state */
    _estate_state_cb_call(mach, tr->to, tr, ESTATE_CB_TYPE_ENTERER);
 
+   /* Unlock callbacks */
+   mach->in_cb = EINA_FALSE;
+
    /* Update current state */
    mach->current_state = tr->to;
 
+   /* Release... */
    eina_stringshare_del(shr);
+
+   /* Allow the state machine to host another cb deferring */
+   deferred = mach->cb_defer;
+   mach->cb_defer = NULL;
+
+   EINA_LIST_FREE(deferred, transition)
+     {
+        estate_machine_transition_do(mach, transition);
+     }
+
    return EINA_TRUE;
 
 fail:

@@ -83,8 +83,11 @@ struct _Estate_Machine
    Eina_Hash           *data; /**< Hash that contains all user data. Searchable
                                  by Eina_Stringshare keys */
 
+   Eina_List           *cb_defer; /**< List of callbacks to be deferred */
+
    unsigned int states_count;
    unsigned int transit_count;
+
 
    Eina_Bool            in_cb; /**< Used to prevent making a transition in a
                                  callback */
