@@ -58,7 +58,7 @@ case "$TERM" in
 esac
 
 if test "${want_color}" = "yes"; then
-   if test `echo -e x` = x; then
+   if test "`echo -e x`" = x; then
       echoopt=-e
    else
       echoopt=
