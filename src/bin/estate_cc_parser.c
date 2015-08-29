@@ -41,6 +41,8 @@ struct _Parser
    unsigned int line;
    unsigned int col;
 
+   unsigned int anonymous;
+
    unsigned char comments;
    unsigned char sm;
    Eina_Bool stop_word;
@@ -263,6 +265,15 @@ estate_cc_parser_parse(Parser *p)
 
               /* Transition (from) -> (to) */
            case '-':
+              if ((p->sm == SM_TRANSITION_START) && (!t))
+                {
+                   char anon[32];
+                   int anon_len;
+                   anon_len = snprintf(anon, sizeof(anon), "TR_%u",
+                                       p->anonymous++);
+                   t = transit_new(anon, anon_len);
+                   p->sm = SM_TRANSITION_FROM;
+                }
               if (p->sm != SM_TRANSITION_FROM)
                 PARSE_ERROR("Unexcepted character '-': not in a transition block."
                             " SM: %i", p->sm);
@@ -275,6 +286,16 @@ estate_cc_parser_parse(Parser *p)
 
               /* Transition (from) > (to) */
            case '>':
+              if ((p->sm == SM_TRANSITION_START) && (!t))
+                {
+                   char anon[32];
+                   int anon_len;
+                   anon_len = snprintf(anon, sizeof(anon), "TR_%u",
+                                       p->anonymous++);
+                   t = transit_new(anon, anon_len);
+                   p->sm = SM_TRANSITION_FROM;
+                }
+
               if (p->sm != SM_TRANSITION_FROM)
                 PARSE_ERROR("Unexcepted character '>'");
               p->has_token = EINA_TRUE;
@@ -540,6 +561,7 @@ estate_cc_parser_parse(Parser *p)
                      PARSE_ERROR("Empty state name");
                    t->to = eina_stringshare_add_length(buf, k);
                    p->sm = SM_TRANSITION_START;
+                   t = NULL;
                    break;
 
                 default:
