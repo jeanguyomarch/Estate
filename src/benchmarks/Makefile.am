@@ -15,6 +15,7 @@ $(top_builddir)/src/lib/libestate.la
 bench.est.c: Makefile $(ESTATE_CC)
 	$(AM_V_EST)$(ESTATE_CC) --gc --output $@ $(srcdir)/bench.est
 
+BUILT_SOURCES = bench.est.c
 EXTRA_DIST = bench.est
 
 clean-local:

@@ -21,6 +21,7 @@ hello_LDADD = @EFL_LIBS@ $(top_builddir)/src/lib/libestate.la
 hello.est.c: Makefile $(ESTATE_CC)
 	$(AM_V_EST)$(ESTATE_CC) --gc --output $@ $(srcdir)/hello.est
 
+BUILT_SOURCES = turnstile.est.c hello.est.c
 EXTRA_DIST = turnstile.est hello.est
 
 clean-local:
