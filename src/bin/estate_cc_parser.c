@@ -451,12 +451,16 @@ estate_cc_parser_parse(Parser *p)
 
                    /* Register what is in func: */
                 case SM_STATE_CB_FUNC_PROP:
+                   if (k == 0)
+                     PARSE_ERROR("Empty property");
                    cb->func = eina_stringshare_add_length(buf, k);
                    p->sm = SM_STATE_CB;
                    break;
 
                    /* Register what is in data: */
                 case SM_STATE_CB_DATA_PROP:
+                   if (k == 0)
+                     PARSE_ERROR("Empty property");
                    cb->data = eina_stringshare_add_length(buf, k);
                    p->sm = SM_STATE_CB;
                    break;
@@ -501,11 +505,15 @@ estate_cc_parser_parse(Parser *p)
                    break;
 
                 case SM_TRANSITION_CB_FUNC_PROP:
+                   if (k == 0)
+                     PARSE_ERROR("Empty property");
                    t->cb.func = eina_stringshare_add_length(buf, k);
                    p->sm = SM_TRANSITION_CB;
                    break;
 
                 case SM_TRANSITION_CB_DATA_PROP:
+                   if (k == 0)
+                     PARSE_ERROR("Empty property");
                    t->cb.data = eina_stringshare_add_length(buf, k);
                    p->sm = SM_TRANSITION_CB;
                    break;
