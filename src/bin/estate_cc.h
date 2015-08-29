@@ -76,6 +76,10 @@ void estate_cc_parser_parse_free(Parser *p);
 
 void estate_cc_data_print(Eina_List *fsm);
 
+Eina_Bool
+estate_cc_out_pgf_tikz(Eina_List  *parse,
+                       const char *file);
+
 Eina_Bool estate_cc_check_states(Eina_List *parse);
 
 Eina_Bool

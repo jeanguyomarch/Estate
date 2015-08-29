@@ -6,12 +6,13 @@ static unsigned int _verbosity = 0;
 
 static const struct option _options[] =
 {
-     {"output",  required_argument, NULL, 'o'},
-     {"gc",      no_argument,       NULL, 'c'},
-     {"gi",      required_argument, NULL, 'i'},
-     {"verbose", no_argument,       NULL, 'v'},
-     {"help",    no_argument,       NULL, 'h'},
-     {NULL,      0,                 NULL,  0}
+     {"output",   required_argument, NULL, 'o'},
+     {"gc",       no_argument,       NULL, 'c'},
+     {"gi",       required_argument, NULL, 'i'},
+     {"pgf-tikz", optional_argument, NULL, 'k'},
+     {"verbose",  no_argument,       NULL, 'v'},
+     {"help",     no_argument,       NULL, 'h'},
+     {NULL,       0,                 NULL,  0}
 };
 
 static void
@@ -19,14 +20,24 @@ _usage(char const *const prog,
        FILE       *      stream)
 {
    fprintf(stream,
-           "Usage: %s --gc|--gi [OPTIONS] file\n"
+           "Usage: %s [--gc|--gi] [OPTIONS] file\n"
            "\n"
            "With the following options:\n"
-           "  -o|--output  <file>  specify the output file. stdout by default\n"
-           "  -c|--gc              generates C code of states machines\n"
-           "  -i|--gi      <file>  generates a C boilerplate for callbacks\n"
-           "  -v|--verbose         cumulative, increase the verbosity level\n"
-           "  -h|--help            display this message\n"
+           "  -o|--output <file>\n"
+           "        specify the output file. stdout by default\n"
+           "\n"
+           "  -c|--gc\n"
+           "        generates C code of states machines\n"
+           "\n"
+           "  -i|--gi <file>\n"
+           "        generates a C boilerplate for callbacks\n"
+           "\n"
+           "  -k|--pgf-tikz [tikz style]\n"
+           "        generates LaTeX (pgf-tikz) code\n"
+           "\n"
+           "  -v|--verbose          cumulative, increase the verbosity level\n"
+           "\n"
+           "  -h|--help             display this message\n"
            "\n",
            prog);
 }
@@ -50,11 +61,12 @@ main(int    argc,
    int c;
    Eina_Bool gc = EINA_FALSE;
    Eina_Bool gi = EINA_FALSE;
+   Eina_Bool pgf_tikz = EINA_FALSE;
 
    /* Getopt */
    while (1)
      {
-        c = getopt_long(argc, argv, "o:ci:vh", _options, NULL);
+        c = getopt_long(argc, argv, "o:ci:k:vh", _options, NULL);
         if (c == -1) break;
         switch (c)
           {
@@ -69,6 +81,10 @@ main(int    argc,
            case 'i':
               gi = EINA_TRUE;
               include = optarg;
+              break;
+
+           case 'k':
+              pgf_tikz = EINA_TRUE;
               break;
 
            case 'v':
@@ -86,14 +102,10 @@ main(int    argc,
      }
 
    /* Check for provided parameters */
-   if ((gc == EINA_FALSE) && (gi == EINA_FALSE))
+   if (gc + gi + pgf_tikz != 1)
      {
-        fprintf(stderr, "*** --gi or --gc must be specified\n");
-        goto end;
-     }
-   if (gc == gi)
-     {
-        fprintf(stderr, "*** --gi and --gc cannot be combined\n");
+        fprintf(stderr, "*** You must specify exactly one conversion format: "
+                "--gc or --gi or -C\n");
         goto end;
      }
 
@@ -149,6 +161,8 @@ main(int    argc,
      estate_cc_out_gi(parse, output, include);
    if (gc)
      estate_cc_out_gc(parse, output);
+   if (pgf_tikz)
+     estate_cc_out_pgf_tikz(parse, output);
 
    ret = EXIT_SUCCESS;
    estate_cc_parser_parse_free(p);

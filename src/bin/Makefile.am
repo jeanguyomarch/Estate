@@ -13,6 +13,7 @@ estate_cc_main.c    \
 estate_cc_data.c    \
 estate_cc_out_gc.c  \
 estate_cc_out_gi.c  \
+estate_cc_out_pgf_tikz.c \
 estate_cc_check.c   \
 estate_cc_misc.c    \
 estate_cc.h
