@@ -1,0 +1,82 @@
+
+estate_parser {
+   transitions {
+      model {
+         /* FSM */
+         fsm_do : Init > Block_Fsm;
+         fsm_done : Block_Fsm > Init;
+
+         /* FSM.transitions */
+         transitions_do : Block_Fsm > Block_Transitions;
+         transitions_done : Block_Transitions > Block_Fsm;
+
+         /* FSM.transitions.model */
+         model_do : Block_Transitions > Block_Model;
+         model_done : Block_Model > Block_Transitions;
+
+         /* FSM.transitions.TRANSITION */
+         transition_do : Block_Transitions > Block_Transition;
+         transition_done : Block_Transition > Block_Transitions;
+
+         /* FSM.transitions.model --- [NAME:] FROM > TO */
+         transition_name_do : Block_Model > Transition_Name; /* Optional */
+         transition_from_do : Block_Model > Transition_From;
+         transition_from_anon_do : Transition_Name > Transition_From;
+         transition_to_do : Transition_From > Transition_To;
+         transition_parsed : Transition_To > Block_Model; /* Loop: read another one */
+
+         /* FSM.transitions.TRANSITION.cb */
+         transition_cb_do : Block_Transition > Block_Transition_Cb;
+         transition_cb_done : Block_Transition_Cb > Block_Transition;
+
+         /* FSM.transitions.TRANSITION.cb.func: */
+         transition_cb_func_do : Block_Transition_Cb > Transition_Property_Func;
+         transition_cb_func_done : Transition_Property_Func > Block_Transition_Cb;
+
+         /* FSM.transitions.TRANSITION.cb.data: */
+         transition_cb_data_do : Block_Transition_Cb > Transition_Property_Data;
+         transition_cb_data_done : Transition_Property_Data > Block_Transition_Cb;
+
+         /* FSM.states */
+         states_do : Block_Fsm > Block_States;
+         states_done : Block_States > Block_Fsm;
+
+         /* FSM.states.STATE [ATTRIBUTES] */
+         state_do : Block_States > Block_State;
+         state_done : Block_State > Block_States;
+         state_attr_do : Block_State > Block_State_Attribute;
+         state_attr_done : Block_State_Attribute > Block_State;
+
+         /* FSM.states.STATE.enterer */
+         state_enterer_do : Block_State > Block_State_Enterer;
+         state_enterer_done : Block_State_Enterer > Block_State;
+
+         /* FSM.states.STATE.exiter */
+         state_exiter_do : Block_State > Block_State_Exiter;
+         state_exiter_done : Block_State_Exiter > Block_State;
+
+         /* FSM.states.STATE.enterer.func: */
+         state_enterer_func_do : Block_State_Enterer > State_Property_Func;
+         state_enterer_func_done : State_Property_Func > Block_State_Enterer;
+
+         /* FSM.states.STATE.enterer.data: */
+         state_enterer_data_do : Block_State_Enterer > State_Property_Data;
+         state_enterer_data_done : State_Property_Data > Block_State_Enterer;
+
+         /* FSM.states.STATE.exiter.func: */
+         state_exiter_func_do : Block_State_Exiter > State_Property_Func;
+         state_exiter_func_done : State_Property_Func > Block_State_Exiter;
+
+         /* FSM.states.STATE.exiter.data: */
+         state_exiter_data_do : State_Property_Data > Block_State_Exiter;
+         state_exiter_data_done : Block_State_Exiter > State_Property_Data;
+      }
+
+   }
+   states {
+
+      Init @init {
+      }
+   }
+
+}
