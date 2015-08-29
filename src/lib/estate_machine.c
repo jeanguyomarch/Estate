@@ -43,6 +43,7 @@ estate_machine_new(unsigned int states,
    /* No current state */
    mach->current_state = NULL;
    mach->locked = EINA_FALSE;
+   mach->in_cb = CB_UNLOCKED;
 
    return mach;
 
@@ -202,7 +203,7 @@ estate_machine_transition_do(Estate_Machine *mach,
      }
 
    /* Deffer transition if this function is called in a callback context */
-   if (mach->in_cb)
+   if (mach->in_cb != CB_UNLOCKED)
      {
         DBG("Transition is called in a callback context. "
             "Deferring transition %s after the entering callback...",
@@ -240,9 +241,6 @@ estate_machine_transition_do(Estate_Machine *mach,
    /* Update current transition */
    mach->current_transition = tr;
 
-   /* Lock callbacks */
-   mach->in_cb = EINA_TRUE;
-
    /* Call exiter callback of current state */
    _estate_state_cb_call(mach, tr->from, tr, ESTATE_CB_TYPE_EXITER);
 
@@ -255,9 +253,6 @@ estate_machine_transition_do(Estate_Machine *mach,
 
    /* Call enterer callback of next state */
    _estate_state_cb_call(mach, tr->to, tr, ESTATE_CB_TYPE_ENTERER);
-
-   /* Unlock callbacks */
-   mach->in_cb = EINA_FALSE;
 
    /* Release... */
    eina_stringshare_del(shr);

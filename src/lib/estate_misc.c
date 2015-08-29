@@ -31,9 +31,9 @@ _estate_misc_cb_call(Estate_Machine          *mach,
    if (wrp->func)
      {
         _estate_misc_cb_cache(mach, wrp);
-        mach->in_cb = EINA_TRUE;
+        mach->in_cb = type;
         wrp->result = wrp->func(wrp->data, type, tr);
-        mach->in_cb = EINA_FALSE;
+        mach->in_cb = CB_UNLOCKED;
      }
 }
 

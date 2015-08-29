@@ -89,8 +89,8 @@ struct _Estate_Machine
    unsigned int transit_count;
 
 
-   Eina_Bool            in_cb; /**< Used to prevent making a transition in a
-                                 callback */
+   unsigned char        in_cb; /**< Used to prevent making a transition in a
+                                 callback but defer then if in an entering cb */
    Eina_Bool            locked; /**< EINA_FALSE when the FSM is being built,
                                    EINA_TRUE when ready */
 };
@@ -191,6 +191,11 @@ _estate_misc_cb_call(Estate_Machine          *mach,
  */
 #define DBG(...) EINA_LOG_DOM_DBG(_estate_log_dom, __VA_ARGS__)
 
+/**
+ * @def CB_UNLOCKED
+ * Value used to declare no callback are running
+ */
+#define CB_UNLOCKED 0xff
 
 /**
  * @}
