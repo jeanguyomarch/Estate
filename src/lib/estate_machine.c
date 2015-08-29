@@ -196,7 +196,14 @@ estate_machine_transition_do(Estate_Machine *mach,
 
    if (EINA_UNLIKELY(!mach->locked))
      {
-        ERR("Attempt to do a transition, but the state machine not locked");
+        ERR("Attempt to do a transition, but the state machine is not locked");
+        return EINA_FALSE;
+     }
+
+   if (EINA_UNLIKELY(mach->in_cb))
+     {
+        ERR("Attempt to do a transition, but it is executed in the context "
+            "of a state machine callback");
         return EINA_FALSE;
      }
 
@@ -226,15 +233,14 @@ estate_machine_transition_do(Estate_Machine *mach,
         goto fail;
      }
 
+   /* Update current transition */
+   mach->current_transition = tr;
+
    /* Call exiter callback of current state */
    _estate_state_cb_call(mach, tr->from, tr, ESTATE_CB_TYPE_EXITER);
 
    /* Execute the transition callback */
-   if (tr->cb.func)
-     {
-        _estate_misc_cb_cache(mach, &tr->cb);
-        tr->cb.func(tr->cb.data, ESTATE_CB_TYPE_TRANSITION, tr);
-     }
+   _estate_misc_cb_call(mach, &tr->cb, ESTATE_CB_TYPE_TRANSITION, tr);
 
    /* Call enterer callback of next state */
    _estate_state_cb_call(mach, tr->to, tr, ESTATE_CB_TYPE_ENTERER);
@@ -250,4 +256,31 @@ fail:
    return EINA_FALSE;
 }
 
+EAPI int
+estate_machine_cb_check(const Estate_Machine *mach,
+                        Estate_Cb_Type        type)
+{
+   EINA_SAFETY_ON_NULL_RETURN_VAL(mach, INT_MIN);
+
+   if (EINA_UNLIKELY(!mach->locked))
+     {
+        ERR("Attempt to check for a callbakc, but the state machine not locked");
+        return EINA_FALSE;
+     }
+
+   switch (type)
+     {
+      case ESTATE_CB_TYPE_ENTERER:
+         return mach->current_state->cb[type].result;
+
+      case ESTATE_CB_TYPE_TRANSITION:
+         return mach->current_transition->cb.result;
+
+      case ESTATE_CB_TYPE_EXITER:
+         return mach->current_transition->from->cb[type].result;
+     }
+
+   /* Should not happen... */
+   return INT_MIN;
+}
 

@@ -61,6 +61,9 @@ struct _Estate_Cb_Wrapper
    void                 *data; /**< Cache where the userdata to be provided to
                                  @c func is stored */
    Eina_Stringshare     *key;  /**< String used to retrieve the user data */
+
+   int                   result; /**< Result of the callback. 0 means no
+                                   error */
 };
 
 /**
@@ -73,7 +76,9 @@ struct _Estate_Machine
 
    Estate_State        *states; /**< Array of all states */
    Estate_Transition   *transit; /**< Array of all transitions */
-   Estate_State        *current_state; /**< Points on the current state */
+   Estate_State        *current_state; /**< Points to the current state */
+   Estate_Transition   *current_transition; /**< Points to the last executed
+                                              transition */
 
    Eina_Hash           *data; /**< Hash that contains all user data. Searchable
                                  by Eina_Stringshare keys */
@@ -81,6 +86,8 @@ struct _Estate_Machine
    unsigned int states_count;
    unsigned int transit_count;
 
+   Eina_Bool            in_cb; /**< Used to prevent making a transition in a
+                                 callback */
    Eina_Bool            locked; /**< EINA_FALSE when the FSM is being built,
                                    EINA_TRUE when ready */
 };
@@ -124,7 +131,7 @@ struct _Estate_Transition
 Eina_Bool _estate_misc_cb_cache(Estate_Machine *mach, Estate_Cb_Wrapper *wrp);
 
 /**
- * Wraps the call to a callback by checking if the callback is set,
+ * Wraps the call to a state callback by checking if the callback is set,
  * does the caching operation and calls the callback
  *
  * @param mach The state machine handler
@@ -134,6 +141,22 @@ Eina_Bool _estate_misc_cb_cache(Estate_Machine *mach, Estate_Cb_Wrapper *wrp);
  * @see _estate_misc_cb_cache()
  */
 void _estate_state_cb_call(Estate_Machine *mach, Estate_State *st, const Estate_Transition *tr, Estate_Cb_Type type);
+
+/**
+ * Wraps the call to a callback by checking if the callback is set,
+ * does the caching operation and calls the callback
+ *
+ * @param mach The state machine handler
+ * @param wrp The callback wrapper
+ * @param type The type of the callback (ESTATE_CB_TYPE_ENTERER or ESTATE_CB_TYPE_EXITER)
+ * @param tr The transition which triggererd the state callback
+ * @see _estate_misc_state_cb_call()
+ */
+void
+_estate_misc_cb_call(Estate_Machine          *mach,
+                     Estate_Cb_Wrapper       *wrp,
+                     Estate_Cb_Type           type,
+                     const Estate_Transition *tr);
 
 /**
  * @def CRI(...)
@@ -166,6 +189,12 @@ void _estate_state_cb_call(Estate_Machine *mach, Estate_State *st, const Estate_
 #define DBG(...) EINA_LOG_DOM_DBG(_estate_log_dom, __VA_ARGS__)
 
 
+/**
+ * @}
+ */
+
+
+
 Estate_Mempool *
 _estate_mempool_new(unsigned int states,
                     unsigned int transitions,
@@ -179,11 +208,6 @@ _estate_mempool_state_push(Estate_Mempool *mp);
 
 Estate_Transition *
 _estate_mempool_transition_push(Estate_Mempool *mp);
-
-
-/**
- * @}
- */
 
 #endif /* ! _ESTATE_PRIVATE_H_ */
 

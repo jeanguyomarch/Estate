@@ -31,6 +31,7 @@ estate_transition_init(Estate_Transition  *tr,
    tr->to = (Estate_State *)to;
    tr->cb.func = func;
    tr->cb.data = NULL;
+   tr->cb.result = ESTATE_CB_OK;
    tr->cb.key = (datakey) ? eina_stringshare_add(datakey) : NULL;
 
    return EINA_TRUE;

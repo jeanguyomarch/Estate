@@ -62,12 +62,14 @@ estate_state_init(Estate_State             *st,
    /* Set enterer */
    st->cb[0].func = enterer;
    st->cb[0].data = NULL;
+   st->cb[0].result = ESTATE_CB_OK;
    st->cb[0].key = (enterer_datakey != NULL) ?
       eina_stringshare_add(enterer_datakey) : NULL;
 
    /* Set exiter */
    st->cb[1].func = exiter;
    st->cb[1].data = NULL;
+   st->cb[1].result = ESTATE_CB_OK;
    st->cb[1].key = (exiter_datakey != NULL) ?
       eina_stringshare_add(exiter_datakey) : NULL;
 
@@ -99,12 +101,7 @@ _estate_state_cb_call(Estate_Machine          *mach,
                       Estate_Cb_Type           type)
 {
    Estate_Cb_Wrapper *wrp = &(st->cb[type]);
-
-   if (wrp->func)
-     {
-        _estate_misc_cb_cache(mach, wrp);
-        wrp->func(wrp->data, type, tr);
-     }
+   _estate_misc_cb_call(mach, wrp, type, tr);
 }
 
 EAPI int

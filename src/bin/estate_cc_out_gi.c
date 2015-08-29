@@ -16,7 +16,7 @@ _gi_cb(FILE *f,
           {
              len = eina_stringshare_strlen(sh);
              fprintf(f,
-                     "static void\n"
+                     "static int\n"
                      "%s(void                    *data       EINA_UNUSED,\n", sh);
 
              for (l = 0; l <= len; ++l)
@@ -29,7 +29,7 @@ _gi_cb(FILE *f,
 
              fprintf(f, "const Estate_Transition *transition EINA_UNUSED)\n"
                      "{\n"
-                     "\n"
+                     "   return ESTATE_CB_OK;\n"
                      "}\n"
                      "\n");
           }

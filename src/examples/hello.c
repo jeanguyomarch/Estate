@@ -14,15 +14,16 @@ estate_fsm_hello_load(void)
    return _estate_fsm_hello_load();
 }
 
-static void
+static int
 _leave_house_cb(void                    *data       EINA_UNUSED,
                 Estate_Cb_Type           type       EINA_UNUSED,
                 const Estate_Transition *transition EINA_UNUSED)
 {
    printf("Bye, House!\n");
+   return ESTATE_CB_OK;
 }
 
-static void
+static int
 _burn_in_hell_cb(void                    *data,
                  Estate_Cb_Type           type       EINA_UNUSED,
                  const Estate_Transition *transition EINA_UNUSED)
@@ -30,14 +31,16 @@ _burn_in_hell_cb(void                    *data,
    struct shopping_cart *shop_cart = data;
    printf("Oh sh*t, I'm in Hell right now... with %u items in my shopping "
           "card... #yolo\n", shop_cart->items_count);
+   return ESTATE_CB_OK;
 }
 
-static void
+static int
 _say_hello_cb(void                    *data       EINA_UNUSED,
               Estate_Cb_Type           type       EINA_UNUSED,
               const Estate_Transition *transition EINA_UNUSED)
 {
    printf("Hello, World!\n");
+   return ESTATE_CB_OK;
 }
 
 

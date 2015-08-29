@@ -165,9 +165,17 @@ typedef enum
  * @param type Which callback has been triggered
  * @param transition The transition related to the callback
  */
-typedef void (*Estate_Cb)(void                    *data,
-                          Estate_Cb_Type           type,
-                          const Estate_Transition *transition);
+typedef int (*Estate_Cb)(void                    *data,
+                         Estate_Cb_Type           type,
+                         const Estate_Transition *transition);
+
+/**
+ * @def ESTATE_CB_OK
+ * The default return value of the estate callbacks. It
+ * means no error were encountered during the execution
+ * of the callback.
+ */
+#define ESTATE_CB_OK 0
 
 /**
  * Initialises the Estate library
@@ -357,6 +365,9 @@ estate_machine_new(unsigned int states,
  * @see estate_machine_new()
  */
 EAPI void estate_machine_free(Estate_Machine *mach);
+
+EAPI int estate_machine_cb_check(const Estate_Machine *mach,
+                                 Estate_Cb_Type        type);
 
 /**
  * Associates a key to a value to be retrieved when a callback is called.

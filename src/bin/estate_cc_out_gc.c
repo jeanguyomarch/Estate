@@ -192,7 +192,7 @@ _proto_func_common(FILE              *f,
    unsigned int i;
    for (i = 0; i < str_count; ++i)
      if (str[i])
-       fprintf(f, "static void %s(void *data, Estate_Cb_Type type, "
+       fprintf(f, "static int %s(void *data, Estate_Cb_Type type, "
                "const Estate_Transition *transition);\n",
                str[i]);
 }

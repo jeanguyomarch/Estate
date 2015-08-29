@@ -22,3 +22,18 @@ _estate_misc_cb_cache(Estate_Machine    *mach,
    return EINA_TRUE;
 }
 
+void
+_estate_misc_cb_call(Estate_Machine          *mach,
+                     Estate_Cb_Wrapper       *wrp,
+                     Estate_Cb_Type           type,
+                     const Estate_Transition *tr)
+{
+   if (wrp->func)
+     {
+        _estate_misc_cb_cache(mach, wrp);
+        mach->in_cb = EINA_TRUE;
+        wrp->result = wrp->func(wrp->data, type, tr);
+        mach->in_cb = EINA_FALSE;
+     }
+}
+

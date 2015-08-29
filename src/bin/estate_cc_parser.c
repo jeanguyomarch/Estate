@@ -290,7 +290,7 @@ estate_cc_parser_parse(Parser *p)
                 {
                    char anon[32];
                    int anon_len;
-                   anon_len = snprintf(anon, sizeof(anon), "TR_%u",
+                   anon_len = snprintf(anon, sizeof(anon), "#TR_%u",
                                        p->anonymous++);
                    t = transit_new(anon, anon_len);
                    p->sm = SM_TRANSITION_FROM;
