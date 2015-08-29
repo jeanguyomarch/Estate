@@ -249,14 +249,15 @@ estate_machine_transition_do(Estate_Machine *mach,
    /* Execute the transition callback */
    _estate_misc_cb_call(mach, &tr->cb, ESTATE_CB_TYPE_TRANSITION, tr);
 
+   /* We just jumped in the new state... Update the current state
+    * before executing the entering callback */
+   mach->current_state = tr->to;
+
    /* Call enterer callback of next state */
    _estate_state_cb_call(mach, tr->to, tr, ESTATE_CB_TYPE_ENTERER);
 
    /* Unlock callbacks */
    mach->in_cb = EINA_FALSE;
-
-   /* Update current state */
-   mach->current_state = tr->to;
 
    /* Release... */
    eina_stringshare_del(shr);
