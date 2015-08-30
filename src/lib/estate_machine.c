@@ -288,13 +288,13 @@ estate_machine_cb_check(const Estate_Machine *mach,
    switch (type)
      {
       case ESTATE_CB_TYPE_ENTERER:
-         return mach->current_state->cb[type].result;
+         return mach->current_state->enterer.result;
 
       case ESTATE_CB_TYPE_TRANSITION:
          return mach->current_transition->cb.result;
 
       case ESTATE_CB_TYPE_EXITER:
-         return mach->current_transition->from->cb[type].result;
+         return mach->current_transition->from->exiter.result;
      }
 
    /* Should not happen... */

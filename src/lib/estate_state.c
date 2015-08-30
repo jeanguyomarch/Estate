@@ -60,17 +60,17 @@ estate_state_init(Estate_State             *st,
             transit_count * sizeof(Estate_Transition *));
 
    /* Set enterer */
-   st->cb[0].func = enterer;
-   st->cb[0].data = NULL;
-   st->cb[0].result = ESTATE_CB_OK;
-   st->cb[0].key = (enterer_datakey != NULL) ?
+   st->enterer.func = enterer;
+   st->enterer.data = NULL;
+   st->enterer.result = ESTATE_CB_OK;
+   st->enterer.key = (enterer_datakey != NULL) ?
       eina_stringshare_add(enterer_datakey) : NULL;
 
    /* Set exiter */
-   st->cb[1].func = exiter;
-   st->cb[1].data = NULL;
-   st->cb[1].result = ESTATE_CB_OK;
-   st->cb[1].key = (exiter_datakey != NULL) ?
+   st->exiter.func = exiter;
+   st->exiter.data = NULL;
+   st->exiter.result = ESTATE_CB_OK;
+   st->exiter.key = (exiter_datakey != NULL) ?
       eina_stringshare_add(exiter_datakey) : NULL;
 
    st->name = eina_stringshare_add(name);
@@ -83,8 +83,8 @@ estate_state_deinit(Estate_State *st)
 {
    if (!st) return;
    if (st->name) eina_stringshare_del(st->name);
-   if (st->cb[0].key) eina_stringshare_del(st->cb[0].key);
-   if (st->cb[1].key) eina_stringshare_del(st->cb[1].key);
+   if (st->enterer.key) eina_stringshare_del(st->exiter.key);
+   if (st->enterer.key) eina_stringshare_del(st->exiter.key);
 }
 
 EAPI const char *
@@ -100,7 +100,16 @@ _estate_state_cb_call(Estate_Machine          *mach,
                       const Estate_Transition *tr,
                       Estate_Cb_Type           type)
 {
-   Estate_Cb_Wrapper *wrp = &(st->cb[type]);
+   Estate_Cb_Wrapper *wrp;
+   if (type == ESTATE_CB_TYPE_ENTERER)
+     wrp = &st->enterer;
+   else if (type == ESTATE_CB_TYPE_EXITER)
+     wrp = &st->exiter;
+   else
+     {
+        CRI("Wtf?!! Unhandled callback type %i", type);
+        return;
+     }
    _estate_misc_cb_call(mach, wrp, type, tr);
 }
 
