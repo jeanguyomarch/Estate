@@ -170,6 +170,25 @@ typedef int (*Estate_Cb)(void                    *data,
                          const Estate_Transition *transition);
 
 /**
+ * @typedef Estate_Cb_Ctor
+ * Type to provide to init functions callback parameters
+ */
+typedef struct _Estate_Cb_Ctor Estate_Cb_Ctor;
+
+/**
+ * @struct _Estate_Cb_Ctor
+ * Contains the information for a better initialization of
+ * callbacss
+ */
+struct _Estate_Cb_Ctor
+{
+   Estate_Cb     func;
+   const char   *key;
+   unsigned int  key_len;
+};
+
+
+/**
  * @def ESTATE_CB_OK
  * The default return value of the estate callbacks. It
  * means no error were encountered during the execution
@@ -253,10 +272,8 @@ estate_state_init(Estate_State             *st,
                   const char               *name,
                   const Estate_Transition **transitions,
                   unsigned int              transit_count,
-                  Estate_Cb                 enterer,
-                  const char               *enterer_datakey,
-                  Estate_Cb                 exiter,
-                  const char               *exiter_datakey);
+                  const Estate_Cb_Ctor     *enterer,
+                  const Estate_Cb_Ctor     *exiter);
 
 /**
  * Releases the internals of a state
@@ -305,18 +322,24 @@ EAPI void estate_transition_free(Estate_Transition *tr);
  * @param name The name to attach to the transition
  * @param from The state from which @c tr starts
  * @param to The state from which @c tr ends
- * @param func The function called when the transition is activated
- * @param datakey The string used to retrieve the user data upon the first
- *        call to @c func
+ * @param cb Helper to set the transition callback. Must be filled manually
+ *           before being passed (e.g. on the stack)
+ * @param st_enterer Helper to set the callback called when the transition
+ *                   enters the @c to state. Must be filled manually
+ *                   before being passed (e.g. on the stack)
+ * @param st_exiter Helper to set the callback called when the transition
+ *                  exits the @c from state. Must be filled manually
+ *                  before being passed (e.g. on the stack)
  * @return EINA_TRUE on success, EINA_FALSE on failure
  */
 EAPI Eina_Bool
-estate_transition_init(Estate_Transition  *tr,
-                       const char         *name,
-                       const Estate_State *from,
-                       const Estate_State *to,
-                       Estate_Cb           func,
-                       const char         *datakey);
+estate_transition_init(Estate_Transition    *tr,
+                       const char           *name,
+                       const Estate_State   *from,
+                       const Estate_State   *to,
+                       const Estate_Cb_Ctor *cb,
+                       const Estate_Cb_Ctor *st_enterer,
+                       const Estate_Cb_Ctor *st_exiter);
 
 /**
  * Releases the internals of a transition

@@ -100,15 +100,24 @@ _each_states_gc_declare_cb(const Eina_Hash *hash   EINA_UNUSED,
    return EINA_TRUE;
 }
 
-static void
+static unsigned int
 _stringize_data(const char   *str,
                 char         *buf,
                 unsigned int  len)
 {
+   unsigned int plen;
+
    if (str)
-     snprintf(buf, len, "\"%s\"", str);
+     {
+        plen = snprintf(buf, len, "\"%s\"", str);
+        plen -= 2; /* Don't track the "" */
+     }
    else
-     snprintf(buf, len, "NULL");
+     {
+        snprintf(buf, len, "NULL");
+        plen = 0;
+     }
+   return plen;
 }
 
 static Eina_Bool
@@ -120,10 +129,10 @@ _each_states_gc_init_cb(const Eina_Hash *hash  EINA_UNUSED,
    Fsm_Wrapper *wrap = fdata;
    State *s = data;
    char b1[128], b2[128];
-   unsigned int i;
+   unsigned int i, len1, len2;
 
-   _stringize_data(s->enterer.data, b1, sizeof(b1));
-   _stringize_data(s->exiter.data, b2, sizeof(b2));
+   len1 = _stringize_data(s->enterer.data, b1, sizeof(b1));
+   len2 = _stringize_data(s->exiter.data, b2, sizeof(b2));
 
    fprintf(wrap->f, "     {\n");
 
@@ -146,16 +155,22 @@ _each_states_gc_init_cb(const Eina_Hash *hash  EINA_UNUSED,
              "        const unsigned int trs_count = 0;\n");
 
    fprintf(wrap->f,
+           "        enterer_ctor.func = %s;\n"
+           "        enterer_ctor.key = %s;\n"
+           "        enterer_ctor.key_len = %u;\n"
+           "        exiter_ctor.func = %s;\n"
+           "        exiter_ctor.key = %s;\n"
+           "        exiter_ctor.key_len = %u;\n"
            "        chk = estate_state_init(s_%s, \"%s\", trs, trs_count,\n"
-           "                                %s, %s, %s, %s);\n"
+           "                                &enterer_ctor, &exiter_ctor);\n"
            "        if (EINA_UNLIKELY(!chk)) goto fsm_fail;\n"
            "        chk = estate_machine_state_add(fsm, s_%s);\n"
            "        if (EINA_UNLIKELY(!chk)) goto fsm_fail;\n"
            "     }\n"
            "\n",
+           s->enterer.func ?: "NULL", b1, len1,
+           s->exiter.func ?: "NULL", b2, len2,
            s->name, s->name,
-           s->enterer.func ?: "NULL", b1,
-           s->exiter.func ?: "NULL", b2,
            s->name);
 
    return EINA_TRUE;
@@ -169,17 +184,34 @@ _each_transitions_gc_init_cb(const Eina_Hash *hash  EINA_UNUSED,
 {
    Fsm_Wrapper *wrap = fdata;
    Transit *t = data;
-   char b[128];
+   char b1[128], b2[128], b3[128];
+   unsigned int len1, len2, len3;
 
-   _stringize_data(t->cb.data, b, sizeof(b));
+   len1 = _stringize_data(t->cb.data, b1, sizeof(b1));
+   len2 = _stringize_data(t->enterer.data, b2, sizeof(b2));
+   len3 = _stringize_data(t->exiter.data, b3, sizeof(b3));
+
    fprintf(wrap->f,
-           "   chk = estate_transition_init(t_%s, \"%s\", s_%s, s_%s, %s, %s);\n"
+           "   cb_ctor.func = %s;\n"
+           "   cb_ctor.key = %s;\n"
+           "   cb_ctor.key_len = %u;\n"
+           "   enterer_ctor.func = %s;\n"
+           "   enterer_ctor.key = %s;\n"
+           "   enterer_ctor.key_len = %u;\n"
+           "   exiter_ctor.func = %s;\n"
+           "   exiter_ctor.key = %s;\n"
+           "   exiter_ctor.key_len = %u;\n"
+           "   chk = estate_transition_init(t_%s, \"%s\", s_%s, s_%s,\n"
+           "                                &cb_ctor, &enterer_ctor, &exiter_ctor);\n"
            "   if (EINA_UNLIKELY(!chk)) goto fsm_fail;\n"
            "   chk = estate_machine_transition_add(fsm, t_%s);\n"
            "   if (EINA_UNLIKELY(!chk)) goto fsm_fail;\n"
            "\n",
+           t->cb.func ?: "NULL", b1, len1,
+           t->enterer.func ?: "NULL", b2, len2,
+           t->exiter.func ?: "NULL", b3, len3,
            t->name, t->name, t->from, t->to,
-           t->cb.func ?: "NULL", b, t->name);
+           t->name);
 
    return EINA_TRUE;
 }
@@ -273,7 +305,9 @@ estate_cc_out_gc(Eina_List  *parse,
                 "_estate_fsm_%s_load(void)\n"
                 "{\n"
                 "   Estate_Machine *fsm = NULL;\n"
-                "   Eina_Bool chk;\n",
+                "   Eina_Bool chk;\n"
+                "   Estate_Cb_Ctor cb_ctor, enterer_ctor, exiter_ctor;\n"
+                "\n",
                 fsm->name);
 
         eina_hash_foreach(fsm->states, _each_states_gc_declare_cb, &wrap);

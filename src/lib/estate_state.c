@@ -45,10 +45,8 @@ estate_state_init(Estate_State             *st,
                   const char               *name,
                   const Estate_Transition **transitions,
                   unsigned int              transit_count,
-                  Estate_Cb                 enterer,
-                  const char               *enterer_datakey,
-                  Estate_Cb                 exiter,
-                  const char               *exiter_datakey)
+                  const Estate_Cb_Ctor     *enterer,
+                  const Estate_Cb_Ctor     *exiter)
 {
    EINA_SAFETY_ON_NULL_RETURN_VAL(st, EINA_FALSE);
    EINA_SAFETY_ON_NULL_RETURN_VAL(name, EINA_FALSE);
@@ -60,18 +58,24 @@ estate_state_init(Estate_State             *st,
             transit_count * sizeof(Estate_Transition *));
 
    /* Set enterer */
-   st->enterer.func = enterer;
-   st->enterer.data = NULL;
-   st->enterer.result = ESTATE_CB_OK;
-   st->enterer.key = (enterer_datakey != NULL) ?
-      eina_stringshare_add(enterer_datakey) : NULL;
+   if (enterer)
+     {
+        st->enterer.func = enterer->func;
+        st->enterer.data = NULL;
+        st->enterer.result = ESTATE_CB_OK;
+        st->enterer.key = (enterer->key != NULL) ?
+           eina_stringshare_add_length(enterer->key, enterer->key_len) : NULL;
+     }
 
    /* Set exiter */
-   st->exiter.func = exiter;
-   st->exiter.data = NULL;
-   st->exiter.result = ESTATE_CB_OK;
-   st->exiter.key = (exiter_datakey != NULL) ?
-      eina_stringshare_add(exiter_datakey) : NULL;
+   if (exiter)
+     {
+        st->exiter.func = exiter->func;
+        st->exiter.data = NULL;
+        st->exiter.result = ESTATE_CB_OK;
+        st->exiter.key = (exiter->key != NULL) ?
+           eina_stringshare_add_length(exiter->key, exiter->key_len) : NULL;
+     }
 
    st->name = eina_stringshare_add(name);
 

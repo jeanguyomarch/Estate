@@ -121,6 +121,11 @@ struct _Estate_Transition
    Estate_Machine       *mach; /**< Points to its finite state machine */
    Estate_Cb_Wrapper     cb;   /**< Callback to be executed when the transition
                                  is being executed */
+
+   Estate_Cb_Wrapper     st_enterer; /**< May be used when this transition enters
+                                       its @c to state */
+   Estate_Cb_Wrapper     st_exiter; /**< May be used when this transition exits
+                                      its @c from state */
 };
 
 /**

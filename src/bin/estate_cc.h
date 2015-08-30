@@ -44,6 +44,8 @@ struct _Transit
    Eina_Stringshare *to;
 
    Cb cb;
+   Cb enterer;
+   Cb exiter;
 };
 
 struct _Fsm
