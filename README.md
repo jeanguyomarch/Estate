@@ -109,6 +109,9 @@ hello { // hello is the name of the finite state machine
             func: _say_hello_cb;
          }
       }
+      // Equivalent to (shorter):
+      // sayHello.cb.func:_say_hello_cb;
+
    }
 
    states {

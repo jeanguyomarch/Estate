@@ -32,7 +32,6 @@
    Whitespaces, new lines, etc. do not interfere with a block structure.
 
 
-
    ## Estate Properties          {#properties}
 
    Estate properties are syntactic elements that are described as it follows:
@@ -52,7 +51,6 @@
 
 
 
-
    ## Estate Attributes          {#attributes}
 
    Estate attributes are syntactic elements that are described as it follows:
@@ -66,6 +64,37 @@
    ~~~~~~~~~~~~~~~{.est}
    block @attribute {
    }
+   ~~~~~~~~~~~~~~~
+
+
+   ## Block abbreviations       {#abbrev}
+
+   Block syntax can be cumbersome wen there are a lot of imbrication and a few
+   properties/attributes.
+   It is possible to abbreviate blocks. This is syntactic suggar for easier
+   redaction.
+
+   Example:
+
+   ~~~~~~~~~~~~~~~{.est}
+   block_1 {
+      block_2 {
+         block_3 {
+            block_4 {
+               block_5 {
+                  property: myprop;
+               }
+            }
+         }
+      }
+   }
+   ~~~~~~~~~~~~~~~
+
+   Can be abbrievated as:
+
+
+   ~~~~~~~~~~~~~~~{.est}
+   block_1.block_2.block_3.block_4.block_4.property: myprop;
    ~~~~~~~~~~~~~~~
 
 
