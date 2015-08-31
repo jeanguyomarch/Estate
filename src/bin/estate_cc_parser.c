@@ -367,13 +367,13 @@ estate_cc_parser_parse(Parser *p)
               if ((p->sm == SM_STATE_CB_FUNC_PROP) ||
                   (p->sm == SM_STATE_CB_DATA_PROP) ||
                   (p->sm == SM_TRANSITION_CB_FUNC_PROP) ||
-                  (p->sm == SM_TRANSITION_CB_DATA_PROP) ||
-                  (p->sm == SM_STATE_ATTRIBUTE))
+                  (p->sm == SM_TRANSITION_CB_DATA_PROP))
                 {
                    leave_block = EINA_TRUE;
                    p->has_token = EINA_TRUE;
                 }
-              else if (p->sm == SM_TRANSITION_TO)
+              else if ((p->sm == SM_TRANSITION_TO) ||
+                       (p->sm == SM_STATE_ATTRIBUTE))
                 p->has_token = EINA_TRUE;
               else
                 PARSE_ERROR("Invalid ';'. SM %i", p->sm);
@@ -522,7 +522,8 @@ estate_cc_parser_parse(Parser *p)
                         else
                           {
                              f->init = eina_stringshare_add(s->name);
-                             p->sm = SM_STATE;
+                             if (c == ';') p->sm = SM_STATES;
+                             else p->sm = SM_STATE;
                           }
                      }
                    else
@@ -651,8 +652,8 @@ estate_cc_parser_parse(Parser *p)
 
         if (leave_block)
           {
-              if (!_block_leave(p))
-                PARSE_ERROR( "Unexpected end of block '%c'", c);
+             if (!_block_leave(p))
+               PARSE_ERROR( "Unexpected end of block '%c'", c);
              leave_block = EINA_FALSE;
           }
      }
