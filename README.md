@@ -12,6 +12,7 @@ Estate library that you can easily integrate within your implementation.
 Have a look at the example below for a better understanding of what
 can bring you Estate and how to use it efficiently.
 
+![Estate Logo](doc/img/estate.png)
 
 Install
 -------
