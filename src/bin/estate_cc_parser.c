@@ -10,24 +10,32 @@ enum
 
 typedef enum
 {
-   SM_NONE = 0,
-   SM_FSM,
-   SM_TRANSITIONS,
-   SM_TRANSITION_START,
-   SM_TRANSITION_FROM,
-   SM_TRANSITION_TO,
-   SM_TRANSITION,
-   SM_TRANSITION_CB,
-   SM_TRANSITION_CB_FUNC_PROP,
-   SM_TRANSITION_CB_DATA_PROP,
-   SM_STATES,
-   SM_STATE,
-   SM_STATE_EOB,
-   SM_STATE_CB,
-   SM_STATE_CB_FUNC_PROP,
-   SM_STATE_CB_DATA_PROP,
-   SM_STATE_PROPERTY
+   /*  0 */ SM_NONE = 0,
+   /*  1 */ SM_FSM,
+   /*  2 */ SM_TRANSITIONS,
+   /*  3 */ SM_TRANSITION_START,
+   /*  4 */ SM_TRANSITION_FROM,
+   /*  5 */ SM_TRANSITION_TO,
+   /*  6 */ SM_TRANSITION,
+   /*  7 */ SM_TRANSITION_CB,
+   /*  8 */ SM_TRANSITION_CB_FUNC_PROP,
+   /*  9 */ SM_TRANSITION_CB_DATA_PROP,
+   /* 10 */ SM_STATES,
+   /* 11 */ SM_STATE,
+   /* 12 */ SM_STATE_EOB,
+   /* 13 */ SM_STATE_CB,
+   /* 14 */ SM_STATE_CB_FUNC_PROP,
+   /* 15 */ SM_STATE_CB_DATA_PROP,
+   /* 16 */ SM_STATE_ATTRIBUTE
 } Sm;
+
+typedef struct
+{
+   Eina_Stringshare *name;
+   unsigned int level;
+   Eina_Bool    terminates_parent;
+} Block;
+
 
 struct _Parser
 {
@@ -42,9 +50,11 @@ struct _Parser
    unsigned int col;
 
    unsigned int anonymous;
+   Eina_Inarray  *blocks;
 
    unsigned char comments;
    unsigned char sm;
+
    Eina_Bool stop_word;
    Eina_Bool has_token;
 };
@@ -92,7 +102,8 @@ _sm_block_is(const Parser *p)
       case SM_STATE:
       case SM_STATES:
       case SM_STATE_CB:
-      case SM_STATE_PROPERTY:
+      case SM_STATE_ATTRIBUTE:
+      case SM_TRANSITION_CB:
          return EINA_TRUE;
 
       default:
@@ -111,8 +122,99 @@ estate_cc_parser_new(void)
         CRI("Failed to allocate Parser");
         return NULL;
      }
+   p->blocks = eina_inarray_new(sizeof(Eina_Bool), 8);
    return p;
 }
+
+
+static Eina_Bool
+_block_enter(Parser    *p,
+             Eina_Bool  terminates_parent)
+{
+   if (_sm_block_is(p))
+     {
+        eina_inarray_push(p->blocks, &terminates_parent);
+        p->has_token = EINA_TRUE;
+        return EINA_TRUE;
+     }
+   return EINA_FALSE;
+}
+
+static Eina_Bool
+_block_leave(Parser *p)
+{
+   Eina_Bool ret = EINA_TRUE;
+   Eina_Bool *terminates;
+   unsigned int count;
+
+   count = eina_inarray_count(p->blocks);
+   if (count == 0)
+     return EINA_FALSE;
+
+   /* Pop last block */
+   eina_inarray_pop(p->blocks);
+   --count;
+
+
+   switch (p->sm)
+     {
+      case SM_STATE_CB:
+         p->sm = SM_STATE;
+         break;
+
+      case SM_STATE:
+         p->sm = SM_STATES;
+         break;
+
+      case SM_STATES:
+         p->sm = SM_FSM;
+         break;
+
+      case SM_TRANSITIONS:
+         p->sm = SM_FSM;
+         break;
+
+      case SM_TRANSITION_START:
+         p->sm = SM_TRANSITIONS;
+         break;
+
+      case SM_TRANSITION_CB:
+         p->sm = SM_TRANSITION;
+         break;
+
+      case SM_TRANSITION:
+         p->sm = SM_TRANSITIONS;
+         break;
+
+      case SM_STATE_CB_FUNC_PROP:
+      case SM_STATE_CB_DATA_PROP:
+         p->sm = SM_STATE_CB;
+         break;
+
+      case SM_TRANSITION_CB_FUNC_PROP:
+      case SM_TRANSITION_CB_DATA_PROP:
+         p->sm = SM_TRANSITION_CB;
+         break;
+
+      case SM_FSM:
+         p->sm = SM_NONE;
+         break;
+
+      default:
+         break;
+     }
+
+   if (count != 0)
+     {
+        terminates = eina_inarray_nth(p->blocks, count - 1);
+        if (*terminates)
+          ret &= _block_leave(p);
+     }
+
+   return ret;
+}
+
+
 
 void
 estate_cc_parser_free(Parser *p)
@@ -183,6 +285,7 @@ estate_cc_parser_parse(Parser *p)
    State *s = NULL;
    Cb *cb = NULL;
    Eina_Stringshare *sh;
+   Eina_Bool leave_block = EINA_FALSE;
 
 #define PARSE_ERROR(fmt_, ...) \
    do { \
@@ -225,15 +328,19 @@ estate_cc_parser_parse(Parser *p)
                 PARSE_ERROR("Invalid character");
               break;
 
+              /* Block abbreviation */
+           case '.':
+              if (!_block_enter(p, EINA_TRUE))
+                PARSE_ERROR("Invalid '.'. Sm is %i", p->sm);
+              break;
+
               /* Start of block */
            case '{':
-              if (_sm_block_is(p))
-                p->has_token = EINA_TRUE;
-              else
+              if (!_block_enter(p, EINA_FALSE))
                 PARSE_ERROR("Invalid '{'. Sm is %i", p->sm);
               break;
 
-              /* Start of state property */
+              /* Start of state attribute */
            case '@':
               if (p->sm == SM_STATES)
                 p->has_token = EINA_TRUE;
@@ -244,8 +351,12 @@ estate_cc_parser_parse(Parser *p)
               /* End of property name */
            case ':':
               if ((p->sm == SM_STATE_CB) ||
-                  (p->sm == SM_TRANSITION_CB) ||
-                  (p->sm == SM_TRANSITION_START))
+                  (p->sm == SM_TRANSITION_CB))
+                {
+                   if (!_block_enter(p, EINA_FALSE))
+                     PARSE_ERROR("Invalid ':' current state is %i", p->sm);
+                }
+              else if (p->sm == SM_TRANSITION_START)
                 p->has_token = EINA_TRUE;
               else
                 PARSE_ERROR("Invalid ':' current state is %i", p->sm);
@@ -257,7 +368,12 @@ estate_cc_parser_parse(Parser *p)
                   (p->sm == SM_STATE_CB_DATA_PROP) ||
                   (p->sm == SM_TRANSITION_CB_FUNC_PROP) ||
                   (p->sm == SM_TRANSITION_CB_DATA_PROP) ||
-                  (p->sm == SM_TRANSITION_TO))
+                  (p->sm == SM_STATE_ATTRIBUTE))
+                {
+                   leave_block = EINA_TRUE;
+                   p->has_token = EINA_TRUE;
+                }
+              else if (p->sm == SM_TRANSITION_TO)
                 p->has_token = EINA_TRUE;
               else
                 PARSE_ERROR("Invalid ';'. SM %i", p->sm);
@@ -303,43 +419,7 @@ estate_cc_parser_parse(Parser *p)
 
               /* End of block. case ENDING_BLOCK: p->sm = PARENT_BLOCK; */
            case '}':
-              switch (p->sm)
-                {
-                 case SM_STATE_CB:
-                    p->sm = SM_STATE;
-                    break;
-
-                 case SM_STATE:
-                    p->sm = SM_STATES;
-                    break;
-
-                 case SM_STATES:
-                    p->sm = SM_FSM;
-                    break;
-
-                 case SM_TRANSITIONS:
-                    p->sm = SM_FSM;
-                    break;
-
-                 case SM_TRANSITION_START:
-                    p->sm = SM_TRANSITIONS;
-                    break;
-
-                 case SM_TRANSITION_CB:
-                    p->sm = SM_TRANSITION;
-                    break;
-
-                 case SM_TRANSITION:
-                    p->sm = SM_TRANSITIONS;
-                    break;
-
-                 case SM_FSM:
-                    p->sm = SM_NONE;
-                    break;
-
-                 default:
-                    PARSE_ERROR( "Unexpected end of block '}'");
-                }
+              leave_block = EINA_TRUE;
               break;
 
               /* Whitespaces */
@@ -414,7 +494,7 @@ estate_cc_parser_parse(Parser *p)
                    /* If there is a property, start parse it.
                     * Otherwise, parse the state */
                    if (c == '@')
-                     p->sm = SM_STATE_PROPERTY;
+                     p->sm = SM_STATE_ATTRIBUTE;
                    else
                      p->sm = SM_STATE;
                    break;
@@ -434,11 +514,11 @@ estate_cc_parser_parse(Parser *p)
                    p->sm = SM_STATE_CB;
                    break;
 
-                case SM_STATE_PROPERTY:
+                case SM_STATE_ATTRIBUTE:
                    if (!strcmp(buf, "init"))
                      {
                         if (f->init)
-                          PARSE_ERROR("Duplicated property @init");
+                          PARSE_ERROR("Duplicated attribute @init");
                         else
                           {
                              f->init = eina_stringshare_add(s->name);
@@ -446,7 +526,7 @@ estate_cc_parser_parse(Parser *p)
                           }
                      }
                    else
-                     PARSE_ERROR("Invalid property [@%s]", buf);
+                     PARSE_ERROR("Invalid attribute [@%s]", buf);
                    break;
 
                    /* Internals of a state callback:
@@ -475,7 +555,6 @@ estate_cc_parser_parse(Parser *p)
                    if (k == 0)
                      PARSE_ERROR("Empty property");
                    cb->func = eina_stringshare_add_length(buf, k);
-                   p->sm = SM_STATE_CB;
                    break;
 
                    /* Register what is in data: */
@@ -483,7 +562,6 @@ estate_cc_parser_parse(Parser *p)
                    if (k == 0)
                      PARSE_ERROR("Empty property");
                    cb->data = eina_stringshare_add_length(buf, k);
-                   p->sm = SM_STATE_CB;
                    break;
 
                    /* Parse the transitions block */
@@ -529,14 +607,12 @@ estate_cc_parser_parse(Parser *p)
                    if (k == 0)
                      PARSE_ERROR("Empty property");
                    t->cb.func = eina_stringshare_add_length(buf, k);
-                   p->sm = SM_TRANSITION_CB;
                    break;
 
                 case SM_TRANSITION_CB_DATA_PROP:
                    if (k == 0)
                      PARSE_ERROR("Empty property");
                    t->cb.data = eina_stringshare_add_length(buf, k);
-                   p->sm = SM_TRANSITION_CB;
                    break;
 
                 case SM_TRANSITION_START:
@@ -571,6 +647,13 @@ estate_cc_parser_parse(Parser *p)
              p->has_token = EINA_FALSE;
              p->stop_word = EINA_FALSE;
              k = 0;
+          }
+
+        if (leave_block)
+          {
+              if (!_block_leave(p))
+                PARSE_ERROR( "Unexpected end of block '%c'", c);
+             leave_block = EINA_FALSE;
           }
      }
 
