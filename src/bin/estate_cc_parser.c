@@ -26,7 +26,9 @@ typedef enum
    /* 13 */ SM_STATE_CB,
    /* 14 */ SM_STATE_CB_FUNC_PROP,
    /* 15 */ SM_STATE_CB_DATA_PROP,
-   /* 16 */ SM_STATE_ATTRIBUTE
+   /* 16 */ SM_STATE_ATTRIBUTE,
+   /* 17 */ SM_DATA,
+   /* 18 */ SM_DATA_GLOBAL_PROP
 } Sm;
 
 typedef struct
@@ -104,6 +106,7 @@ _sm_block_is(const Parser *p)
       case SM_STATE_CB:
       case SM_STATE_ATTRIBUTE:
       case SM_TRANSITION_CB:
+      case SM_DATA:
          return EINA_TRUE;
 
       default:
@@ -158,6 +161,14 @@ _block_leave(Parser *p)
 
    switch (p->sm)
      {
+      case SM_DATA:
+         p->sm = SM_FSM;
+         break;
+
+      case SM_DATA_GLOBAL_PROP:
+         p->sm = SM_DATA;
+         break;
+
       case SM_STATE_CB:
          p->sm = SM_STATE;
          break;
@@ -351,7 +362,8 @@ estate_cc_parser_parse(Parser *p)
               /* End of property name */
            case ':':
               if ((p->sm == SM_STATE_CB) ||
-                  (p->sm == SM_TRANSITION_CB))
+                  (p->sm == SM_TRANSITION_CB) ||
+                  (p->sm == SM_DATA))
                 {
                    if (!_block_enter(p, EINA_FALSE))
                      PARSE_ERROR("Invalid ':' current state is %i", p->sm);
@@ -367,7 +379,8 @@ estate_cc_parser_parse(Parser *p)
               if ((p->sm == SM_STATE_CB_FUNC_PROP) ||
                   (p->sm == SM_STATE_CB_DATA_PROP) ||
                   (p->sm == SM_TRANSITION_CB_FUNC_PROP) ||
-                  (p->sm == SM_TRANSITION_CB_DATA_PROP))
+                  (p->sm == SM_TRANSITION_CB_DATA_PROP) ||
+                  (p->sm == SM_DATA_GLOBAL_PROP))
                 {
                    leave_block = EINA_TRUE;
                    p->has_token = EINA_TRUE;
@@ -472,16 +485,41 @@ estate_cc_parser_parse(Parser *p)
                    break;
 
                    /* In the FSM block I can describe:
+                    *   - data
                     *   - transitions
                     *   - states
                     */
                 case SM_FSM:
-                   if (!strcmp(buf, "transitions")) /* Block transitions */
+                   if (!strcmp(buf, "data")) /* Block data */
+                     p->sm = SM_DATA;
+                   else if (!strcmp(buf, "transitions")) /* Block transitions */
                      p->sm = SM_TRANSITIONS;
                    else if (!strcmp(buf, "states")) /* Block states */
                      p->sm = SM_STATES;
                    else
                      PARSE_ERROR("Unexpected token [%s]. SM is %i", buf, p->sm);
+                   break;
+
+                   /* In the Data block... next can be key property */
+                case SM_DATA:
+                   if (!strcmp(buf, "global")) /* global property */
+                     p->sm = SM_DATA_GLOBAL_PROP;
+                   break;
+
+                   /* data.key property */
+                case SM_DATA_GLOBAL_PROP:
+                     {
+                        Eina_Stringshare *shr;
+
+                        shr = eina_stringshare_add_length(buf, k);
+                        if (eina_hash_find(f->data_keys, shr))
+                          {
+                             eina_stringshare_del(shr);
+                             PARSE_ERROR("Key [%s] has already been specified"
+                                         " in block data", buf);
+                          }
+                        eina_hash_add(f->data_keys, shr, shr);
+                     }
                    break;
 
                    /* Just found a new state description... */

@@ -53,6 +53,7 @@ fsm_new(const char *name,
    f->name = eina_stringshare_add_length(name, len);
    f->transitions = eina_hash_stringshared_new(EINA_FREE_CB(transit_free));
    f->states = eina_hash_stringshared_new(EINA_FREE_CB(state_free));
+   f->data_keys = eina_hash_stringshared_new(EINA_FREE_CB(eina_stringshare_del));
 
    return f;
 }
@@ -64,6 +65,7 @@ fsm_free(Fsm *f)
    eina_stringshare_del(f->name);
    eina_hash_free(f->transitions);
    eina_hash_free(f->states);
+   eina_hash_free(f->data_keys);
    free(f);
 }
 
