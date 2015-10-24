@@ -3,6 +3,11 @@
  */
 
 hello { // hello is the name of the finite state machine
+
+   data {
+      global: Context;
+   }
+
    transitions {
       /* Describe the transitions */
       model {
