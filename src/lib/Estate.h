@@ -409,6 +409,28 @@ estate_machine_data_set(Estate_Machine *mach,
                         const void     *value);
 
 /**
+ * Attach a user pointer to the provided FSM.
+ * It will be available from every states and transitions
+ * through the Estate_Machine handler.
+ *
+ * @param mach The FSM which global data must be set
+ * @param data The data to be set. It's lifetime is not managed by @c mach
+ * @see estate_machine_global_data_get()
+ */
+EAPI void
+estate_machine_global_data_set(Estate_Machine *mach,
+                               const void     *data);
+
+/**
+ * Retrieves the global data attached to a FSM
+ * @param mach The finite state machine to query
+ * @return The global data attached to @c mach
+ * @see estate_machine_global_data_set()
+ */
+EAPI void *
+estate_machine_global_data_get(const Estate_Machine *mach);
+
+/**
  * Registers a new state in the finite state machine.
  * Fails if the FSM is locked.
  *

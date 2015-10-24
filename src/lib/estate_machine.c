@@ -45,6 +45,9 @@ estate_machine_new(unsigned int states,
    mach->locked = EINA_FALSE;
    mach->in_cb = CB_UNLOCKED;
 
+   /* No global data by default */
+   mach->global_data = NULL;
+
    return mach;
 
 fail:
@@ -299,5 +302,25 @@ estate_machine_cb_check(const Estate_Machine *mach,
 
    /* Should not happen... */
    return INT_MIN;
+}
+
+EAPI void
+estate_machine_global_data_set(Estate_Machine *mach,
+                               const void     *data)
+{
+   EINA_SAFETY_ON_NULL_RETURN(mach);
+   if (mach->global_data)
+     {
+        ERR("You have already set the global data");
+        return;
+     }
+   mach->global_data = (void *)data;
+}
+
+EAPI void *
+estate_machine_global_data_get(const Estate_Machine *mach)
+{
+   EINA_SAFETY_ON_NULL_RETURN_VAL(mach, NULL);
+   return mach->global_data;
 }
 

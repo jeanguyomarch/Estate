@@ -85,6 +85,8 @@ struct _Estate_Machine
 
    Eina_List           *cb_defer; /**< List of callbacks to be deferred */
 
+   void                *global_data; /**< Global data, accessible by all states and transitions */
+
    unsigned int states_count;
    unsigned int transit_count;
 
