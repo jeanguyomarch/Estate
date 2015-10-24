@@ -107,7 +107,7 @@ struct _Parser
    Eina_Bool has_token;
 };
 
-static char
+static char EINA_UNUSED
 _char_next_get(Parser *p)
 {
    char c;
@@ -304,9 +304,9 @@ main(int    argc,
    Parser *p;
    Eina_Bool chk;
    Estate_Machine *fsm;
-   int c;
-   char buf[2048];
-   unsigned int k = 0;
+   //int c;
+   //char buf[2048];
+   //unsigned int k = 0;
 
    if (argc != 2) return 1;
    p = estate_cc_parser_new();
