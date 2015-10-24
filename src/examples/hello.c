@@ -43,6 +43,18 @@ _say_hello_cb(void                    *data       EINA_UNUSED,
    return ESTATE_CB_OK;
 }
 
+static void
+_error_cb(const Estate_Machine *mach,
+          const Estate_Error    err,
+          const char           *source,
+          const char           *message)
+{
+   printf("*** An error of type %i was raised by machine %p.\n"
+          "*** Source: [%s]\n"
+          "*** Message: [%s]\n",
+          err, mach, source, message);
+   printf("If you have seen the error above, that's fine :-)\n");
+}
 
 int
 main(void)
@@ -58,6 +70,9 @@ main(void)
 
    /* Load the finite state machine */
    fsm = estate_fsm_hello_load();
+
+   /* Set the error callback */
+   estate_machine_error_cb_set(fsm, _error_cb);
 
    /* Register the shopping cart data */
    estate_machine_data_set(fsm, "ShoppingCart", cart);

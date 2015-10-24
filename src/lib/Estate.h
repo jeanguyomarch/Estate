@@ -157,6 +157,16 @@ typedef enum
 } Estate_Cb_Type;
 
 /**
+ * @typedef Estate_Error
+ * Error codes of Estate
+ */
+typedef enum
+{
+   ESTATE_ERROR_NONE = 0,
+   ESTATE_ERROR_TRANSITION
+} Estate_Error;
+
+/**
  * @typedef Estate_Cb
  * Callback raised when a transition is activated, and therefore
  * the current state is changing
@@ -168,6 +178,21 @@ typedef enum
 typedef int (*Estate_Cb)(void                    *data,
                          Estate_Cb_Type           type,
                          const Estate_Transition *transition);
+
+/**
+ * @typedef Estate_Error_Cb
+ * Callback raised when an error has occured (e.g. transition could
+ * not be executed
+ *
+ * @param mach The finite state machine that raised the error
+ * @param err The type of error
+ * @param source What caused the error, if available
+ * @param message The complete error message
+ */
+typedef void (*Estate_Error_Cb)(const Estate_Machine *mach,
+                                const Estate_Error    err,
+                                const char           *source,
+                                const char           *message);
 
 /**
  * @typedef Estate_Cb_Ctor
@@ -477,6 +502,15 @@ EAPI Estate_State *estate_machine_current_state_get(const Estate_Machine *mach);
  * @param current The init state: starting point of the FSM
  */
 EAPI void estate_machine_lock(Estate_Machine *mach, const Estate_State *current);
+
+/**
+ * Sets the error callback of the provided FSM
+ *
+ * @param mach The FSM which error callback must be set
+ * @param error_cb The error callback to be provided to @c mach
+ */
+EAPI void estate_machine_error_cb_set(Estate_Machine        *mach,
+                                      const Estate_Error_Cb  error_cb);
 
 /**
  * If the current state can make the transition @c transition, then the FSM

@@ -80,6 +80,8 @@ struct _Estate_Machine
    Estate_Transition   *current_transition; /**< Points to the last executed
                                               transition */
 
+   Estate_Error_Cb      error_cb; /** Function called on error */
+
    Eina_Hash           *data; /**< Hash that contains all user data. Searchable
                                  by Eina_Stringshare keys */
 
