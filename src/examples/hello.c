@@ -95,6 +95,7 @@ main(void)
 
 
    /* Release resources */
+   estate_machine_free(fsm);
    free(cart);
    estate_shutdown(); /* Shutdown Estate */
 
